@@ -1,1 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security In Computing Practicals</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<style>
+    /* Read More button */
+.read-more {
+    display: block;
+    width: 100%;
+    max-width: 200px; /* Limits the button width for better aesthetics */
+    /* margin: 1rem auto 0; Centers the button and adds spacing */
+    padding: 0.75rem 1.5rem; /* Increased padding for better click area */
+    background-color: #3498db; /* Primary blue color */
+    color: white;
+    border: none;
+    border-radius: 6px; /* Slightly larger radius for smoothness */
+    font-size: 1rem;
+    font-weight: bold; /* Makes text stand out */
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+}
 
+.read-more:hover {
+    background-color: #2980b9; /* Darker shade on hover */
+    transform: scale(1.05); /* Slight scale-up effect */
+}
+
+.read-more:active {
+    transform: scale(0.95); /* Slight scale-down on click */
+}
+
+/* Ensure full-content is hidden by default */
+.full-content {
+    display: none;
+    margin-top: 1rem;
+}
+</style>
+<body>
+    <header>
+        <h1>Security In Computing Practicals</h1>
+    </header>
+    <div class="container">
+        <!-- Practical 1 -->
+       <!-- Practical 1 -->
+<div class="card">
+    <h2>Practical 1: Configure Routers for Syslog, NTP, and SSH Operation</h2>
+    <div class="summary">
+        <p><strong>Objectives:</strong> Configure OSPF MD5 authentication, NTP, syslog logging, and SSH on R3.</p>
+        <p><strong>Topology:</strong> R1, R2, R3, PC-A, PC-B, PC-C with specific IP configurations.</p>
+    </div>
+    <div class="full-content">
+        <h3>Topology</h3>
+        <table>
+            <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+            <tr><td>R1</td><td>gig0/0</td><td>192.168.1.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+            <tr><td>R1</td><td>Se0/1/0</td><td>10.1.1.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+            <tr><td>R2</td><td>Se0/1/0</td><td>10.1.1.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+            <tr><td>R2</td><td>Se0/1/1</td><td>10.2.2.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+            <tr><td>R3</td><td>gig0/0</td><td>192.168.3.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+            <tr><td>R3</td><td>Se0/1/0</td><td>10.2.2.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+            <tr><td>PC-A</td><td>NIC</td><td>192.168.1.5</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+            <tr><td>PC-B</td><td>NIC</td><td>192.168.1.6</td><td>255.255.255.0</td><td>192.168.3.1</td></tr>
+            <tr><td>PC-C</td><td>NIC</td><td>192.168.3.5</td><td>255.255.255.0</td><td>N/A</td></tr>
+        </table>
+        <h3>Objectives</h3>
+        <ul>
+            <li>Configure OSPF MD5 authentication.</li>
+            <li>Configure NTP.</li>
+            <li>Configure routers to log messages to the syslog server.</li>
+            <li>Configure R3 to support SSH connections.</li>
+            <li>Configure Router with password.</li>
+        </ul>
+        <h3>Steps</h3>
+        <p><strong>Step 1: Configure password for vty lines</strong><br>R(config)# line vty 0 4<br>R(config-line)# password vtypa55<br>R(config-line)# login</p>
+        <p><strong>Step 2: Configure secret on router</strong><br>R(config)# enable secret enpa55</p>
+        <p><strong>Step 3: Configure OSPF on routers</strong><br>R1(config)# router ospf 1<br>R1(config-router)# network 192.168.1.0 0.0.0.255 area 0<br>R1(config-router)# network 10.1.1.0 0.0.0.3 area 0<br>R2(config)# router ospf 1<br>R2(config-router)# network 10.1.1.0 0.0.0.3 area 0<br>R2(config-router)# network 10.2.2.0 0.0.0.3 area 0<br>R3(config)# router ospf 1<br>R3(config-router)# network 192.168.3.0 0.0.0.255 area 0<br>R3(config-router)# network 10.2.2.0 0.0.0.3 area 0</p>
+        <p><strong>Step 4: Test Connectivity</strong><br>PC-A > ping 192.168.3.5<br>Successful<br>PC-B > ping 192.168.3.5<br>Successful</p>
+
+        <h3>Part 1: Configure OSPF MD5 Authentication</h3>
+        <p><strong>Step 1: Test connectivity</strong><br>All devices should be able to ping all other IP addresses.</p>
+        <p><strong>Step 2: Configure OSPF MD5 authentication for all the routers in area 0</strong><br>R1(config)# router ospf 1<br>R1(config-router)# area 0 authentication message-digest<br>R2(config)# router ospf 1<br>R2(config-router)# area 0 authentication message-digest<br>R3(config)# router ospf 1<br>R3(config-router)# area 0 authentication message-digest</p>
+        <p><strong>Step 3: Configure the MD5 key for all the routers in area 0</strong><br>Configure an MD5 key on the serial interfaces on R1, R2, and R3. Use the password MD5pa55 for key 1.<br>R1(config)# interface s0/1/0<br>R1(config-if)# ip ospf message-digest-key 1 md5 MD5pa55<br>R2(config)# interface s0/1/0<br>R2(config-if)# ip ospf message-digest-key 1 md5 MD5pa55<br>R2(config-if)# interface s0/1/1<br>R2(config-if)# ip ospf message-digest-key 1 md5 MD5pa55<br>R3(config)# interface s0/1/0<br>R3(config-if)# ip ospf message-digest-key 1 md5 MD5pa55</p>
+        <p><strong>Step 4: Verify configurations</strong><br>a. Verify the MD5 authentication configurations using the commands show ip ospf interface.<br>b. Verify end-to-end connectivity.<br>R# show ip ospf interface<br>Message-digest Authentication Enabled<br>Youngest key ID is 1</p>
+
+        <h3>Part 2: Configure NTP</h3>
+        <p><strong>Step 1: Enable NTP authentication on PC-A</strong><br>a. On PC-A, click NTP under the Services tab to verify NTP service is enabled.<br>b. To configure NTP authentication, click Enable under Authentication. Use key 1 and password NTPpa55 for authentication.</p>
+        <p><strong>Step 2: Configure R1, R2, and R3 as NTP clients</strong><br>R1(config)# ntp server 192.168.1.5<br>R2(config)# ntp server 192.168.1.5<br>R3(config)# ntp server 192.168.1.5</p>
+        <p><strong>Step 3: Configure routers to update hardware clock</strong><br>Configure R1, R2, and R3 to periodically update the hardware clock with the time learned from NTP.<br>R1(config)# ntp update-calendar<br>R2(config)# ntp update-calendar<br>R3(config)# ntp update-calendar<br>Verify that the hardware Clock was Updated<br>R# show clock</p>
+        <p><strong>Step 4: Configure NTP authentication on the routers</strong><br>Configure NTP authentication on R1, R2, and R3 using key 1 and password NTPpa55.<br>R1(config)# ntp authenticate<br>R1(config)# ntp trusted-key 1<br>R1(config)# ntp authentication-key 1 md5 NTPpa55<br>R2(config)# ntp authenticate<br>R2(config)# ntp trusted-key 1<br>R2(config)# ntp authentication-key 1 md5 NTPpa55<br>R3(config)# ntp authenticate<br>R3(config)# ntp trusted-key 1<br>R3(config)# ntp authentication-key 1 md5 NTPpa55</p>
+        <p><strong>Step 5: Configure routers to timestamp log messages</strong><br>Execute commands on all routers<br>R1(config)# service timestamps log datetime msec<br>R2(config)# service timestamps log datetime msec<br>R3(config)# service timestamps log datetime msec</p>
+
+        <h3>Part 3: Configure Routers to Log Messages to the Syslog Server</h3>
+        <p><strong>Step 1: Configure the routers to identify the remote host (Syslog Server) that will receive logging messages</strong><br>R1(config)# logging host 192.168.1.6<br>R2(config)# logging host 192.168.1.6<br>R3(config)# logging host 192.168.1.6<br>The router console will display a message that logging has started.</p>
+        <p><strong>Step 2: Verify logging configuration</strong><br>Use the command<br>R# show logging<br>to verify logging has been enabled.</p>
+        <p><strong>Step 3: Examine logs of the Syslog Server</strong><br>From the Services tab of the Syslog Server’s dialogue box, select the Syslog services button. Observe the logging messages received from the routers.<br>Note: Log messages can be generated on the server by executing commands on the router. For example, entering and exiting global configuration mode will generate an informational configuration message. You may need to click a different service and then click Syslog again to refresh the message display.</p>
+
+        <h3>Part 4: Configure R3 to Support SSH Connections</h3>
+        <p><strong>Step 1: Configure a domain name of ccnasecurity.com on R3</strong><br>R3(config)# ip domain-name ccnasecurity.com</p>
+        <p><strong>Step 2: Configure users for login to the SSH server on R3</strong><br>Create a user ID of SSHadmin with the highest possible privilege level and a secret password of sshpa55.<br>R3(config)# username SSHadmin privilege 15 secret sshpa55</p>
+        <p><strong>Step 3: Configure the incoming vty lines on R3</strong><br>Use the local user accounts for mandatory login and validation. Accept only SSH connections.<br>R3(config)# line vty 0 4<br>R3(config-line)# login local<br>R3(config-line)# transport input ssh</p>
+        <p><strong>Step 4: Erase existing key pairs on R3</strong><br>Any existing RSA key pairs should be erased on the router.<br>R3(config)# crypto key zeroize rsa<br>Note: If no keys exist, you might receive this message: % No Signature RSA Keys found in configuration.</p>
+        <p><strong>Step 5: Generate the RSA encryption key pair for R3</strong><br>The router uses the RSA key pair for authentication and encryption of transmitted SSH data. Configure the RSA keys with a modulus of 1024. The default is 512, and the range is from 360 to 2048.<br>R3(config)# crypto key generate rsa<br>The name for the keys will be: R3.ccnasecurity.com<br>Choose the size of the key modulus in the range of 360 to 2048 for your General Purpose Keys. Choosing a key modulus greater than 512 may take a few minutes<br>How many bits in the modulus [512]: 1024<br>% Generating 1024 bit RSA keys, keys will be non-exportable...[OK]<br>Note: The command to generate RSA encryption key pairs for R3 in Packet Tracer differs from those used in the lab.</p>
+        <p><strong>Step 6: Verify the SSH configuration</strong><br>Use the show ip ssh command to see the current settings. Verify that the authentication timeout and retries are at their default values of 120 and 3.<br>R3# show ip ssh<br>SSH enabled-version 1.99<br>Authentication time out: 120 secs; Authentication retries: 3</p>
+        <p><strong>Step 7: Configure SSH timeouts and authentication parameters</strong><br>The default SSH timeouts and authentication parameters can be altered to be more restrictive. Set the timeout to 90 seconds, the number of authentication retries to 2, and the version to 2.<br>R3(config)# ip ssh time-out 90<br>R3(config)# ip ssh authentication-retries 2<br>R3(config)# ip ssh version 2<br>Verify the SSH configuration<br>R3# show ip ssh<br>SSH enabled-version 2.0<br>Authentication time out: 90 secs; Authentication retries: 2</p>
+        <p><strong>Step 8: Attempt to connect to R3 via Telnet from PC-C</strong><br>Open the Desktop of PC-C. Select the Command Prompt icon. From PC-C, enter the command to connect to R3 via Telnet.<br>PC> telnet 192.168.3.1<br>This connection should fail because R3 has been configured to accept only SSH connections on the virtual terminal lines.</p>
+        <p><strong>Step 9: Connect to R3 using SSH on PC-C</strong><br>Open the Desktop of PC-C. Select the Command Prompt icon. From PC-C, enter the command to connect to R3 via SSH. When prompted for the password, enter the password configured for the administrator shpa55.<br>PC> ssh -l SSHadmin 192.168.3.1<br>Password: sshpa55</p>
+        <p><strong>Step 10: Connect to R3 using SSH on R2</strong><br>To troubleshoot and maintain R3, the administrator at the ISP must use SSH to access the router CLI. From the CLI of R2, enter the command to connect to R3 via SSH version 2 using the SSHadmin user account. When prompted for the password, enter the password configured for the administrator: ciscosshpa55.<br>R2# ssh -v 2 -l SSHadmin 10.2.2.1<br>Password: sshpa55</p>
+    </div>
+    <button class="read-more">Read More</button>
+</div>
+
+        <!-- Practical 2 -->
+        <div class="card">
+            <h2>Practical 2: Configure AAA Authentication on Cisco Routers</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure local AAA authentication for console and vty lines.</p>
+                <p><strong>Topology:</strong> R1, PC0, PC1 with specific IP configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>192.168.1.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>PC0</td><td>NIC</td><td>192.168.1.2</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+                    <tr><td>PC1</td><td>NIC</td><td>192.168.1.3</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Configure a local user account on R1 and configure authenticate on the console and vty lines using local AAA.</li>
+                    <li>Verify local AAA authentication from the R1 console and the PC0 client and PC1 Client.</li>
+                </ul>
+                <h3>Steps</h3>
+                <p><strong>Step 1: Configure password for vty lines</strong><br>R1(config)# line vty 0 4<br>R1(config-line)# password vtypa55<br>R1(config-line)# login</p>
+                <p><strong>Step 2: Configure secret on router</strong><br>R1(config)# enable secret enpa55</p>
+                <p><strong>Step 3: Configure OSPF on routers</strong><br>R1(config)# router ospf 1<br>R1(config-router)# network 192.168.1.0 0.0.0.255 area 0</p>
+                <p><strong>Step 4: Configure OSPF MD5 authentication for all router in area 0</strong><br>R1(config)# router ospf 1<br>R1(config-router)# area 0 authentication message-digest</p>
+                <p><strong>Step 5: Configure MD5 key for all routers in area 0</strong><br>R1(config)# int gig0/0<br>R1(config-if)# ip ospf message-digest-key 1 md5 pa55</p>
+                <p><strong>Step 6: Verify configurations</strong><br>a. Verify the MD5 authentication configurations using the commands show ip ospf interface.<br>b. Verify end-to-end connectivity.<br>R1# show ip ospf interface<br>Message-digest Authentication Enabled<br>Youngest key ID is 1</p>
+
+                <h3>Part 1: Configure Local AAA Authentication for Console Access on R1</h3>
+                <p><strong>Step 1: Test Connectivity</strong><br>PC0 > ping 192.168.1.3<br>Successful<br>PC1 > ping 192.168.1.2<br>Successful</p>
+                <p><strong>Step 2: Configure Local username on R1</strong><br>R1(config)# username admin secret adminpa55</p>
+                <p><strong>Step 3: Configure local AAA authentication for console access on R1</strong><br>R1(config)# aaa new-model<br>R1(config)# aaa authentication login default local</p>
+                <p><strong>Step 4: Configure the line console to use the defined AAA authentication method</strong><br>R1(config)# line console 0<br>R1(config-line)# login authentication default</p>
+                <p><strong>Step 5: Verify the AAA authentication method</strong><br>R1(config-line)# end<br>User Access Verification<br>Username: admin<br>Password: adminpa55<br>R1></p>
+
+                <h3>Part 2: Configure Local AAA Authentication for vty Lines on R1</h3>
+                <p><strong>Step 1: Configure domain name and crypto key for use with SSH</strong><br>R1(config)# ip domain-name ccnasecurity.com<br>R1(config)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+                <p><strong>Step 2: Configure a named list AAA authentication method for the vty lines on R1</strong><br>R1(config)# aaa authentication login SSH-LOGIN local</p>
+                <p><strong>Step 3: Configure the vty lines to use the defined AAA authentication method</strong><br>R1(config)# line vty 0 4<br>R1(config-line)# login authentication SSH-LOGIN<br>R1(config-line)# transport input ssh<br>R1(config-line)# end</p>
+                <p><strong>Step 4: Verify the AAA authentication method</strong><br>PC0> ssh –l Admin 192.168.1.1<br>Password: adminpa55<br>R1><br>PC1> ssh –l Admin 192.168.1.1<br>Password: adminpa55<br>R1></p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+        <!-- Practical 3 -->
+        <div class="card">
+            <h2>Practical 3: Configuring Extended ACLs</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure, apply, and verify extended numbered and named ACLs.</p>
+                <p><strong>Topology:</strong> R1, Server, PC1, PC2 with specific IP configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>172.22.34.65</td><td>255.255.255.224</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>gig0/1</td><td>172.22.34.97</td><td>255.255.255.240</td><td>N/A</td></tr>
+                    <tr><td>Server</td><td>NIC</td><td>172.22.34.62</td><td>255.255.255.224</td><td>172.22.34.65</td></tr>
+                    <tr><td>PC1</td><td>NIC</td><td>172.22.34.66</td><td>255.255.255.224</td><td>172.22.34.65</td></tr>
+                    <tr><td>PC2</td><td>NIC</td><td>172.22.34.98</td><td>255.255.255.240</td><td>172.22.34.97</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Configure, Apply and Verify an Extended Numbered ACL</li>
+                    <li>Configure, Apply and Verify an Extended Named ACL</li>
+                </ul>
+                <h3>Scenario</h3>
+                <ul>
+                    <li>PC1 Should be allowed only FTP access</li>
+                    <li>PC2 Should be allowed only web access</li>
+                    <li>Both PCs must ping server but not each other</li>
+                </ul>
+                <h3>Steps</h3>
+                <p><strong>Step 1: Configure password for vty lines</strong><br>R1(config)# line vty 0 4<br>R1(config-line)# password vtypa55<br>R1(config-line)# login</p>
+                <p><strong>Step 2: Configure secret on router</strong><br>R1(config)# enable secret enpa55</p>
+
+                <h3>Part 1: Configure, Apply and Verify an Extended Numbered ACL</h3>
+                <p><strong>Step 1: Configure an ACL to permit FTP and ICMP</strong><br>Use Router 2911<br>R1(config)# access-list 100 permit tcp 172.22.34.64 0.0.0.31 host 172.22.34.62 eq ftp<br>R1(config)# access-list 100 permit icmp 172.22.34.64 0.0.0.31 host 172.22.34.62</p>
+                <p><strong>Step 2: Apply the ACL on the correct interface to filter traffic</strong><br>R1(config)# int gig 0/0<br>R1(config-if)# ip access-group 100 in</p>
+                <p><strong>Step 3: Verify the ACL implementation</strong><br>a. Ping from PC1 to Server.<br>PC1> ping 172.22.34.62<br>(Successful)<br>b. FTP from PC1 to Server. The username and password are both cisco.<br>PC1> ftp 172.22.34.62<br>c. Exit the FTP service of the Server.<br>ftp> quit<br>d. Ping from PC1 to PC2.<br>PC1> ping 172.22.34.98<br>(Unsuccessful) destination host unreachable</p>
+
+                <h3>Part 2: Configure, Apply and Verify an Extended Named ACL</h3>
+                <p><strong>Step 1: Configure an ACL to permit HTTP access and ICMP</strong><br>R1(config)# ip access-list extended HTTP_ONLY<br>R1(config-ext-nacl)# permit tcp 172.22.34.96 0.0.0.15 host 172.22.34.62 eq www<br>R1(config-ext-nacl)# permit icmp 172.22.34.96 0.0.0.15 host 172.22.34.62</p>
+                <p><strong>Step 2: Apply the ACL on the correct interface to filter traffic</strong><br>R1(config)# int gig0/1<br>R1(config-if)# ip access-group HTTP_ONLY in</p>
+                <p><strong>Step 3: Verify the ACL implementation</strong><br>a. Ping from PC2 to Server.<br>PC2> ping 172.22.34.62<br>(Successful)<br>b. FTP from PC2 to Server<br>PC2> ftp 172.22.34.62<br>(Unsuccessful)<br>c. Open the web browser on PC2.<br>URL -> http://172.22.34.62<br>(Successful)<br>d. Ping from PC2 to PC1.<br>PC> ping 172.22.34.66<br>(Unsuccessful)</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+        <!-- Practical 3b -->
+        <div class="card">
+            <h2>Practical 3b: Configuring Extended ACLs (SSH Scenario)</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure, apply, and verify an extended numbered ACL.</p>
+                <p><strong>Topology:</strong> RTA, SWA, SWB, SWC, PCA, PCB with specific IP configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>RTA</td><td>gig0/0</td><td>10.101.117.49</td><td>255.255.255.248</td><td>N/A</td></tr>
+                    <tr><td>RTA</td><td>gig0/1</td><td>10.101.117.33</td><td>255.255.255.240</td><td>N/A</td></tr>
+                    <tr><td>RTA</td><td>gig0/2</td><td>10.101.117.1</td><td>255.255.255.224</td><td>N/A</td></tr>
+                    <tr><td>PCA</td><td>NIC</td><td>10.101.117.51</td><td>255.255.255.248</td><td>10.101.117.49</td></tr>
+                    <tr><td>PCB</td><td>NIC</td><td>10.101.117.35</td><td>255.255.255.240</td><td>10.101.117.33</td></tr>
+                    <tr><td>SWA</td><td>VLAN 1</td><td>10.101.117.50</td><td>255.255.255.248</td><td>10.101.117.49</td></tr>
+                    <tr><td>SWB</td><td>VLAN 1</td><td>10.101.117.34</td><td>255.255.255.240</td><td>10.101.117.33</td></tr>
+                    <tr><td>SWC</td><td>VLAN 1</td><td>10.101.117.2</td><td>255.255.255.224</td><td>10.101.117.1</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Configure, Apply and Verify an Extended Numbered ACL</li>
+                </ul>
+                <h3>Scenario</h3>
+                <ul>
+                    <li>Devices on one LAN are allowed to remotely access devices in another LAN using SSH protocol</li>
+                    <li>Besides ICMP, all traffic from other networks is denied</li>
+                </ul>
+                <h3>Steps</h3>
+                <p><strong>Step 1: Configure the IP address on switch</strong><br>SWA(config)# int vlan 1<br>SWA(config-if)# ip address 10.101.117.50 255.255.255.248<br>SWA(config-if)# no shut<br>SWA(config-if)# ip default-gateway 10.101.117.49<br>SWB(config)# int vlan 1<br>SWB(config-if)# ip address 10.101.117.34 255.255.255.240<br>SWB(config-if)# no shut<br>SWB(config-if)# ip default-gateway 10.101.117.33<br>SWC(config)# int vlan 1<br>SWC(config-if)# ip address 10.101.117.2 255.255.255.224<br>SWC(config-if)# no shut<br>SWC(config-if)# ip default-gateway 10.101.117.1</p>
+                <p><strong>Step 2: Configure the secret on router and switch</strong><br>RTA/SW(config)# enable secret enpa55</p>
+                <p><strong>Step 3: Configure the console password on router and switch</strong><br>RTA/SW(config)# line console 0<br>RTA/SW(config)# password tyit<br>RTA/SW(config)# login</p>
+                <p><strong>Step 4: Test connectivity</strong><br>Ping from PCA to PC-B.<br>PCA> ping 10.101.117.35<br>(Successful)<br>Ping from PCA to SWC.<br>PCA> ping 10.101.117.2<br>(Successful)<br>Ping from PCB to SWC.<br>PCB> ping 10.101.117.2<br>(Successful)</p>
+
+                <h3>Part 1: Configure Switch and Router to support SSH Connection</h3>
+                <p><strong>Step 1: Configure domain name and crypto key for use with SSH</strong><br>RTA/SW(config)# ip domain-name ccnasecurity.com</p>
+                <p><strong>Step 2: Configure users to login to SSH</strong><br>RTA/SW(config)# username admin secret adminpa55</p>
+                <p><strong>Step 3: Configure incoming vty lines</strong><br>RTA/SW(config)# line vty 0 4<br>RTA/SW(config-line)# login local<br>RTA/SW(config)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+                <p><strong>Step 4: Verify the SSH Connection</strong><br>PCA> ssh -l Admin 10.101.117.34<br>Password: adminpa55<br>SWB><br>PCA> ssh -l Admin 10.101.117.2<br>Password: adminpa55<br>SWC><br>PCB> ssh -l Admin 10.101.117.50<br>Password: adminpa55<br>SWA><br>PCB> ssh -l Admin 10.101.117.2<br>Password: adminpa55<br>SWC><br>SWC> ssh -l Admin 10.101.117.50<br>Password: adminpa55<br>SWA><br>SWC> ssh -l Admin 10.101.117.34<br>Password: adminpa55<br>SWB><br>SWB> exit</p>
+
+                <h3>Part 2: Configure, Apply and Verify an Extended Numbered ACL</h3>
+                <p><strong>Step 1: Configure the extended ACL</strong><br>RTA(config)# access-list 199 permit tcp 10.101.117.32 0.0.0.15 10.101.117.0 0.0.0.31 eq 22<br>RTA(config)# access-list 199 permit icmp any any</p>
+                <p><strong>Step 2: Apply the extended ACL</strong><br>RTA(config)# int gig0/2<br>RTA(config-if)# ip access-group 199 out</p>
+                <p><strong>Step 3: Verify the extended ACL implementation</strong><br>a. Ping from PCB to all of the other IP addresses in the network.<br>PCB> ping 10.101.117.51<br>(Successful)<br>PCB> ping 10.101.117.2<br>(Successful)<br>b. SSH from PCB to SWC.<br>PCB> ssh -l Admin 10.101.117.2<br>Password: adminpa55<br>SWC><br>c. Exit the SSH session to SWC.<br>SWC> exit<br>d. Ping from PCA to all of the other IP addresses in the network.<br>PCA> ping 10.101.117.35<br>(Successful)<br>PCA> ping 10.101.117.2<br>(Successful)<br>e. SSH from PCA to SWC<br>PCA> ssh -l Admin 10.101.117.2<br>Connection timed out. Remote host not responding<br>f. SSH from PCA to SWB.<br>PCA> ssh -l Admin 10.101.117.34<br>Password: adminpa55<br>SWB><br>g. After logging into SWB, do not log out. SSH to SWC in privileged EXEC mode.<br>SWB# ssh -l Admin 10.101.117.2<br>Password: adminpa55<br>SWC</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+        <!-- Practical 4 -->
+        <div class="card">
+            <h2>Practical 4: Configure IP ACLs to Mitigate Attacks</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Use ACLs to secure remote access and mitigate attacks.</p>
+                <p><strong>Topology:</strong> R1, R2, R3, PC-A, PC-C with specific IP configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>192.168.1.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>Se0/1/0 (DCE)</td><td>10.1.1.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/0</td><td>10.1.1.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/1 (DCE)</td><td>10.2.2.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Lo0</td><td>192.168.2.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>gig0/0</td><td>192.168.3.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>Se0/1/0</td><td>10.2.2.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>PC-A</td><td>Fa0</td><td>192.168.1.3</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+                    <tr><td>PC-C</td><td>Fa0</td><td>192.168.3.3</td><td>255.255.255.0</td><td>192.168.3.1</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Verify connectivity among devices before firewall configuration.</li>
+                    <li>Use ACLs to ensure remote access to the routers is available only from management station PC-C.</li>
+                    <li>Configure ACLs on R1 and R3 to mitigate attacks.</li>
+                    <li>Verify ACL functionality.</li>
+                </ul>
+                <h3>Steps</h3>
+                <p><strong>Step 1: Configure secret on router</strong><br>R(config)# enable secret enpa55</p>
+                <p><strong>Step 2: Configure console password on router</strong><br>R(config)# line console 0<br>R(config-line)# password conpa55<br>R(config-line)# login</p>
+                <p><strong>Step 3: Configure SSH login on router</strong><br>Execute command on all routers<br>R(config)# ip domain-name ccnasecurity.com<br>R(config)# username admin secret adminpa55<br>R(config)# line vty 0 4<br>R(config-line)# login local<br>R(config)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+                <p><strong>Step 4: Configure loop back address on Router 2</strong><br>R2(config)# int loopback 0<br>R2(config-if)# ip address 192.168.2.1 255.255.255.0<br>R2(config-if)# no shut</p>
+                <p><strong>Step 5: Configure static routing on routers</strong><br>Execute command on all routers<br>R1(config)# ip route 192.168.3.0 255.255.255.0 10.1.1.2<br>R1(config)# ip route 10.2.2.0 255.255.255.252 10.1.1.2<br>R1(config)# ip route 192.168.2.0 255.255.255.0 10.1.1.2<br>R2(config)# ip route 192.168.1.0 255.255.255.0 10.1.1.1<br>R2(config)# ip route 192.168.3.0 255.255.255.0 10.2.2.1<br>R3(config)# ip route 192.168.1.0 255.255.255.0 10.2.2.2<br>R3(config)# ip route 192.168.2.0 255.255.255.0 10.2.2.2<br>R3(config)# ip route 10.1.1.0 255.255.255.0 10.2.2.2</p>
+
+                <h3>Part 2: Verify Basic Network Connectivity</h3>
+                <p><strong>Step 1: From PC-A, verify connectivity to PC-C and R2</strong><br>PCA> ping 192.168.3.3<br>(Successful)<br>PCA> ping 192.168.2.1<br>(Successful)<br>PCA> ssh –l admin 192.168.2.1<br>Password: adminpa55<br>R2> exit</p>
+                <p><strong>Step 2: From PC-C, verify connectivity to PC-A and R2</strong><br>PCC> ping 192.168.1.3<br>(Successful)<br>PCC> ping 192.168.2.1<br>(Successful)<br>PCC> ssh –l admin 192.168.2.1<br>Password: adminpa55<br>R2> exit<br>Open a web browser to the PC-A server (192.168.1.3) to display the web page.<br>Close the browser when done.<br>Desktop->Web Browser->192.168.1.3<br>(Successful)</p>
+
+                <h3>Part 3: Secure Access to Routers</h3>
+                <p><strong>Step 1: Configure ACL 10 to block all remote access to the routers except from PC-C</strong><br>Execute command on all routers<br>R(config)# access-list 10 permit host 192.168.3.3</p>
+                <p><strong>Step 2: Apply ACL 10 to ingress traffic on the VTY lines</strong><br>Execute command on all routers<br>R(config)# line vty 0 4<br>R(config-line)# access-class 10 in</p>
+                <p><strong>Step 3: Verify exclusive access from management station PC-C</strong><br>PCC> ssh –l admin 192.168.2.1<br>Password: adminpa55<br>R2> exit</p>
+                <p><strong>Step 4: Verify denial from PC-A</strong><br>PCA> ssh –l admin 192.168.2.1<br>Connection refused by remote host</p>
+
+                <h3>Part 4: Create a Numbered IP ACL 120 on R1</h3>
+                <p><strong>Step 1: Verify that PC-C can access the PC-A via HTTPS using the web browser</strong><br>Be sure to disable HTTP and enable HTTPS on server PC-A in Services tab.</p>
+                <p><strong>Step 2: Configure ACL 120 to specifically permit and deny the specified traffic</strong><br>R1(config)# access-list 120 permit udp any host 192.168.1.3 eq domain<br>R1(config)# access-list 120 permit tcp any host 192.168.1.3 eq smtp<br>R1(config)# access-list 120 permit tcp any host 192.168.1.3 eq ftp<br>R1(config)# access-list 120 deny tcp any host 192.168.1.3 eq 443<br>R1(config)# access-list 120 permit tcp host 192.168.3.3 host 10.1.1.1 eq 22</p>
+                <p><strong>Step 3: Apply the ACL to interface</strong><br>R1(config)# int se0/1/0<br>R1(config-if)# ip access-group 120 in</p>
+                <p><strong>Step 4: Verify that PC-C cannot access PC-A via HTTPS using the web browser</strong><br>Desktop->Web Browser->192.168.1.3<br>(Unsuccessful) Request timed out</p>
+
+                <h3>Part 5: Modify an Existing ACL on R1</h3>
+                <p><strong>Step 1: Verify that PC-A cannot successfully ping the loopback interface on R2</strong><br>PCA> ping 192.168.2.1<br>(Unsuccessful) Request timed out</p>
+                <p><strong>Step 2: Make any necessary changes to ACL 120 to permit and deny the specified traffic</strong><br>R1(config)# access-list 120 permit icmp any any echo-reply<br>R1(config)# access-list 120 permit icmp any any unreachable<br>R1(config)# access-list 120 deny icmp any any<br>R1(config)# access-list 120 permit ip any any</p>
+                <p><strong>Step 3: Verify that PC-A can successfully ping the loopback interface on R2</strong><br>PCA> ping 192.168.2.1<br>(Successful)</p>
+
+                <h3>Part 6: Create a Numbered IP ACL 110 on R3</h3>
+                <p><strong>Step 1: Configure ACL 110 to permit only traffic from the inside network</strong><br>R3(config)# access-list 110 permit ip 192.168.3.0 0.0.0.255 any</p>
+                <p><strong>Step 2: Apply the ACL to interface</strong><br>R3(config)# int gig0/0<br>R3(config-if)# ip access-group 110 in</p>
+
+                <h3>Part 7: Create a Numbered IP ACL 100 on R3</h3>
+                <p><strong>Step 1: Configure ACL 100 to block all specified traffic from the outside network</strong><br>R3(config)# access-list 100 permit tcp 10.0.0.0 0.255.255.255 host 192.168.3.3 eq 22<br>R3(config)# access-list 100 deny ip 10.0.0.0 0.255.255.255 any<br>R3(config)# access-list 100 deny ip 172.16.0.0 0.15.255.255 any<br>R3(config)# access-list 100 deny ip 192.168.0.0 0.0.255.255 any<br>R3(config)# access-list 100 deny ip 127.0.0.0 0.255.255.255 any<br>R3(config)# access-list 100 deny ip 224.0.0.0 15.255.255.255 any<br>R3(config)# access-list 100 permit ip any any</p>
+                <p><strong>Step 2: Apply the ACL to interface</strong><br>R3(config)# interface se0/1/0<br>R3(config-if)# ip access-group 100 in</p>
+                <p><strong>Step 3: Confirm that the specified traffic entering interface Serial is handled correctly</strong><br>PCC> ping 192.168.1.3<br>(Unsuccessful)<br>PCC> ssh –l admin 192.168.2.1<br>Password: adminpa55<br>R2> exit</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+        
+
+        <!-- Practical 4b -->
+        <div class="card">
+            <h2>Practical 4b: Configure IPv6 ACLs to Mitigate Attacks</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure, apply, and verify IPv6 ACLs.</p>
+                <p><strong>Topology:</strong> R1, R2, R3, PC1, PC2, Server with IPv6 configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IPv6 Address/Prefix</th><th>Default Gateway</th></tr>
+                    <tr><td>PC1</td><td>NIC</td><td>2001:DB8:1:10::10/64</td><td>FE80::1</td></tr>
+                    <tr><td>PC2</td><td>NIC</td><td>2001:DB8:1:11::11/64</td><td>FE80::1</td></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>2001:DB8:1:10::1/64</td><td>FE80::1</td></tr>
+                    <tr><td>R1</td><td>se0/1/0</td><td>2001:DB8:1:1::1/64</td><td>FE80::1</td></tr>
+                    <tr><td>R1</td><td>gig0/1</td><td>2001:DB8:1:11::1/64</td><td>FE80::1</td></tr>
+                    <tr><td>R2</td><td>se0/1/0</td><td>2001:DB8:1:1::2/64</td><td>FE80::2</td></tr>
+                    <tr><td>R2</td><td>se0/1/1</td><td>2001:DB8:1:2::2/64</td><td>FE80::2</td></tr>
+                    <tr><td>R3</td><td>gig0/0</td><td>2001:DB8:1:30::1/64</td><td>FE80::3</td></tr>
+                    <tr><td>R3</td><td>se0/1/0</td><td>2001:DB8:1:2::1/64</td><td>FE80::3</td></tr>
+                    <tr><td>Server</td><td>NIC</td><td>2001:DB8:1:30::30/64</td><td>FE80::3</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Configure, Apply, and Verify an IPv6 ACL</li>
+                    <li>Configure, Apply, and Verify a Second IPv6 ACL</li>
+                </ul>
+                <h3>Steps</h3>
+                <p><strong>Step 1: Configure secret on router</strong><br>Execute command on all routers<br>R(config)# enable secret enpa55</p>
+                <p><strong>Step 2: Assign static IPv6 address</strong><br>R1(config)# int gig0/0<br>R1(config-if)# ipv6 address 2001:DB8:1:10::1/64<br>R1(config-if)# ipv6 address FE80::1 link-local<br>R1(config-if)# no shut<br>R1(config)# int gig0/1<br>R1(config-if)# ipv6 address 2001:DB8:1:11::1/64<br>R1(config-if)# ipv6 address FE80::1 link-local<br>R1(config-if)# no shut<br>R1(config)# int se0/1/0<br>R1(config-if)# ipv6 address 2001:DB8:1:1::1/64<br>R1(config-if)# ipv6 address FE80::1 link-local<br>R1(config-if)# no shut<br>R2(config)# int se0/1/0<br>R2(config-if)# ipv6 address 2001:DB8:1:1::2/64<br>R2(config-if)# ipv6 address FE80::2 link-local<br>R2(config-if)# no shut<br>R2(config)# int se0/1/1<br>R2(config-if)# ipv6 address 2001:DB8:1:2::2/64<br>R2(config-if)# ipv6 address FE80::2 link-local<br>R2(config-if)# no shut<br>R3(config)# int gig0/0<br>R3(config-if)# ipv6 address 2001:DB8:1:30::1/64<br>R3(config-if)# ipv6 address FE80::3 link-local<br>R3(config-if)# no shut<br>R3(config)# int se0/1/0<br>R3(config-if)# ipv6 address 2001:DB8:1:2::1/64<br>R3(config-if)# ipv6 address FE80::3 link-local<br>R3(config-if)# no shut</p>
+                <p><strong>Step 3: Enable IPv6 routing</strong><br>R1(config)# ipv6 unicast-routing<br>R1(config)# ipv6 route 2001:DB8:1:2::0/64 2001:DB8:1:1::2<br>R1(config)# ipv6 route 2001:DB8:1:30::0/64 2001:DB8:1:1::2<br>R2(config)# ipv6 unicast-routing<br>R2(config)# ipv6 route 2001:DB8:1:10::0/64 2001:DB8:1:1::1<br>R2(config)# ipv6 route 2001:DB8:1:11::0/64 2001:DB8:1:1::1<br>R2(config)# ipv6 route 2001:DB8:1:30::0/64 2001:DB8:1:2::1<br>R3(config)# ipv6 unicast-routing<br>R3(config)# ipv6 route 2001:DB8:1:10::0/64 2001:DB8:1:2::2<br>R3(config)# ipv6 route 2001:DB8:1:11::0/64 2001:DB8:1:2::2<br>R3(config)# ipv6 route 2001:DB8:1:1::0/64 2001:DB8:1:2::2</p>
+                <p><strong>Step 4: Verify connectivity</strong><br>PC1> ping 2001:DB8:1:30::30<br>(Successful)<br>PC2> ping 2001:DB8:1:30::30<br>(Successful)</p>
+
+                <h3>Part 2: Configure, Apply, and Verify an IPv6 ACL</h3>
+                <p><strong>Step 1: Configure an ACL that will block HTTP and HTTPS access</strong><br>R1(config)# ipv6 access-list BLOCK_HTTP<br>R1(config-ipv6-acl)# deny tcp any host 2001:DB8:1:30::30 eq www<br>R1(config-ipv6-acl)# deny tcp any host 2001:DB8:1:30::30 eq 443<br>R1(config-ipv6-acl)# permit ipv6 any any<br>R1(config-ipv6-acl)# exit</p>
+                <p><strong>Step 2: Apply the ACL to the correct interface</strong><br>R1(config)# int gig0/1<br>R1(config-if)# ipv6 traffic-filter BLOCK_HTTP in</p>
+                <p><strong>Step 3: Verify the ACL implementation</strong><br>Open a web browser to the PC1 to display the web page.<br>Desktop->Web Browser->http://2001:DB8:1:30::30<br>(Successful)<br>Desktop->Web Browser->https://2001:DB8:1:30::30<br>(Successful)<br>Open a web browser to the PC2 to display the web page.<br>Desktop->Web Browser->http://2001:DB8:1:30::30<br>(Unsuccessful) – Request Timeout<br>Desktop->Web Browser->https://2001:DB8:1:30::30<br>(Unsuccessful) – Request Timeout<br>PC2> ping 2001:DB8:1:30::30<br>(Successful)</p>
+
+                <h3>Part 3: Configure, Apply, and Verify a Second IPv6 ACL</h3>
+                <p><strong>Step 1: Create an access list to block ICMP</strong><br>R3(config)# ipv6 access-list BLOCK_ICMP<br>R3(config-ipv6-acl)# deny icmp any any<br>R3(config-ipv6-acl)# permit ipv6 any any<br>R3(config-ipv6-acl)# exit</p>
+                <p><strong>Step 2: Apply the ACL to the correct interface</strong><br>R3(config)# int gig0/0<br>R3(config-if)# ipv6 traffic-filter BLOCK_ICMP out</p>
+                <p><strong>Step 3: Verify that the proper access list functions</strong><br>PC2> ping 2001:DB8:1:30::30<br>(Unsuccessful) - Destination host unreachable<br>PC1> ping 2001:DB8:1:30::30<br>(Unsuccessful) - Destination host unreachable<br>Open a web browser to the PC1 to display the web page.<br>Desktop->Web Browser->http://2001:DB8:1:30::30<br>(Successful)<br>Desktop->Web Browser->https://2001:DB8:1:30::30<br>(Successful)</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+<!-- Practical 5 -->
+
+        <div class="card">
+            <h2>Practical 5: Configure Zone-Based Policy Firewall on Cisco Routers</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure and verify a zone-based policy firewall on R3.</p>
+                <p><strong>Topology:</strong> R1, R2, R3, PC-A, PC-C with specific IP configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>192.168.1.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>Se0/1/0 (DCE)</td><td>10.1.1.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/0</td><td>10.1.1.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/1 (DCE)</td><td>10.2.2.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>gig0/0</td><td>192.168.3.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>Se0/1/0</td><td>10.2.2.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>PC-A</td><td>NIC</td><td>192.168.1.3</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+                    <tr><td>PC-C</td><td>NIC</td><td>192.168.3.3</td><td>255.255.255.0</td><td>192.168.3.1</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Verify connectivity among devices before firewall configuration.</li>
+                    <li>Configure a zone-based policy (ZPF) firewall on R3.</li>
+                    <li>Verify ZPF firewall functionality using ping, SSH, and a web browser.</li>
+                </ul>
+                <h3>Steps</h3>
+                <p><strong>Step 1: Configure console password on router</strong><br>Execute command on all routers<br>R(config)# line console 0<br>R(config-line)# password conpa55<br>R(config-line)# login</p>
+                <p><strong>Step 2: Configure password for vty lines</strong><br>Execute command on all routers<br>R(config)# line vty 0 4<br>R(config-line)# password vtypa55<br>R(config-line)# login</p>
+                <p><strong>Step 3: Configure secret on router</strong><br>R(config)# enable secret enpa55</p>
+                <p><strong>Step 4: Configure SSH login on router</strong><br>Execute command on all routers<br>R(config)# ip domain-name ccnasecurity.com<br>R(config)# username admin secret adminpa55<br>R(config)# line vty 0 4<br>R(config-line)# login local<br>R(config)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+                <p><strong>Step 5: Configure static routing on routers</strong><br>Execute command on all routers<br>R(config)# ip route destination-network-address subnetmask next-hopdestination-address<br><em>Note: Replace with specific routes as needed based on topology.</em></p>
+
+                <h3>Part 2: Verify Basic Network Connectivity</h3>
+                <p><strong>Step 1: Check connectivity from PCA to PCC</strong><br>PCA> ping 192.168.3.3<br>(Successful)</p>
+                <p><strong>Step 2: Access R2 using SSH</strong><br>PCC> ssh –l admin 10.2.2.2<br>Password: adminpa55<br>R2> exit</p>
+                <p><strong>Step 3: From PC-C, open a web browser to the PC-A server</strong><br>Desktop -> Web Browser<br>URL: http://192.168.1.3<br>(Successful)</p>
+
+                <h3>Part 3: Create the Firewall Zones on R3</h3>
+                <p><strong>Step 1: Verify that the Security Technology package</strong><br>R3# show version</p>
+                <p><strong>Step 2: Enable the Security Technology package</strong><br>R3(config)# license boot module c1900 technology-package securityk9</p>
+                <p><strong>Step 3: Save the running-config and reload the router</strong><br>R3# copy run start<br>R3# reload</p>
+                <p><strong>Step 4: Verify that the Security Technology package</strong><br>R3# show version</p>
+                <p><strong>Step 5: Create an internal zone</strong><br>R3(config)# zone security IN-ZONE<br>R3(config-sec-zone)# exit</p>
+                <p><strong>Step 6: Create an external zone</strong><br>R3(config)# zone security OUT-ZONE<br>R3(config-sec-zone)# exit</p>
+
+                <h3>Part 4: Identify Traffic Using a Class-Map</h3>
+                <p><strong>Step 1: Create an ACL that defines internal traffic</strong><br>R3(config)# access-list 101 permit ip 192.168.3.0 0.0.0.255 any</p>
+                <p><strong>Step 2: Create a class map referencing the internal traffic ACL</strong><br>R3(config)# class-map type inspect match-all IN-NET-CLASS-MAP<br>R3(config-cmap)# match access-group 101<br>R3(config-cmap)# exit</p>
+
+                <h3>Part 5: Specify Firewall Policies</h3>
+                <p><strong>Step 1: Create a policy map to determine what to do with matched traffic</strong><br>R3(config)# policy-map type inspect IN-2-OUT-PMAP</p>
+                <p><strong>Step 2: Specify a class type of inspect and reference class map IN-NET-CLASS-MAP</strong><br>R3(config-pmap)# class type inspect IN-NET-CLASS-MAP</p>
+                <p><strong>Step 3: Specify the action of inspect for this policy map</strong><br>R3(config-pmap-c)# inspect<br>R3(config-pmap-c)# exit<br>R3(config-pmap)# exit</p>
+
+                <h3>Part 6: Apply Firewall Policies</h3>
+                <p><strong>Step 1: Create a pair of zones</strong><br>R3(config)# zone-pair security IN-2-OUT-ZPAIR source IN-ZONE destination OUT-ZONE</p>
+                <p><strong>Step 2: Specify the policy map for handling the traffic between the two zones</strong><br>R3(config-sec-zone-pair)# service-policy type inspect IN-2-OUT-PMAP<br>R3(config-sec-zone-pair)# exit</p>
+                <p><strong>Step 3: Assign interfaces to the appropriate security zones</strong><br>R3(config)# int g0/0<br>R3(config-if)# zone-member security IN-ZONE<br>R3(config-if)# exit<br>R3(config)# int s0/1/0<br>R3(config-if)# zone-member security OUT-ZONE<br>R3(config-if)# exit</p>
+                <p><strong>Step 4: Copy the running configuration to the startup configuration</strong><br>R3# copy run start<br>R3# reload</p>
+
+                <h3>Part 7: Test Firewall Functionality from IN-ZONE to OUT-ZONE</h3>
+                <p><strong>Step 1: From internal PC-C, ping the external PC-A server</strong><br>PCC> ping 192.168.1.3<br>(Successful)</p>
+                <p><strong>Step 2: Access R2 using SSH</strong><br>PCC> ssh –l admin 10.2.2.2<br>Password: adminpa55<br>R2></p>
+                <p><strong>Step 3: View established sessions</strong><br>R3# show policy-map type inspect zone-pair sessions<br>Session 175216232 (192.168.3.3:1028)=>(10.2.2.2:22) tcp SIS_OPEN/TCP_ESTAB</p>
+                <p><strong>Step 4: From PC-C, exit the SSH session on R2 and close the command prompt window</strong><br>R2> exit</p>
+                <p><strong>Step 5: From internal PC-C, open a web browser to the PC-A server web page</strong><br>Desktop -> Web Browser<br>URL: http://192.168.1.3<br>(Successful)</p>
+                <p><strong>Step 6: View established sessions</strong><br>R3# show policy-map type inspect zone-pair sessions<br>Session 565266624 (192.168.3.3:1031)=>(192.168.1.3:80) tcp SIS_OPEN/TCP_ESTAB</p>
+
+                <h3>Part 8: Test Firewall Functionality from OUT-ZONE to IN-ZONE</h3>
+                <p><strong>Step 1: From internal PC-A, ping the external PC-C server</strong><br>PCA> ping 192.168.3.3<br>(Unsuccessful – Request timed out)</p>
+                <p><strong>Step 2: From R2, ping PC-C</strong><br>R2# ping 192.168.3.3<br>(Unsuccessful – Request timed out)</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+
+        <!-- Practical 6 -->
+        <div class="card">
+            <h2>Practical 6: Configure IOS Intrusion Prevention System (IPS)</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Enable and configure IOS IPS with logging and signature modification.</p>
+                <p><strong>Topology:</strong> R1, R2, R3, Syslog, PC-A, PC-C with specific IP configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>192.168.1.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>Se0/1/0 (DCE)</td><td>10.1.1.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/0</td><td>10.1.1.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/1 (DCE)</td><td>10.2.2.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>gig0/0</td><td>192.168.3.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>Se0/1/0</td><td>10.2.2.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>Syslog</td><td>NIC</td><td>192.168.1.50</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+                    <tr><td>PC-A</td><td>NIC</td><td>192.168.1.2</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+                    <tr><td>PC-C</td><td>NIC</td><td>192.168.3.2</td><td>255.255.255.0</td><td>192.168.3.1</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Enable IOS IPS.</li>
+                    <li>Configure logging.</li>
+                    <li>Modify an IPS signature.</li>
+                    <li>Verify IPS.</li>
+                </ul>
+                <h3>Part 1: Configure Router</h3>
+                <p><strong>Step 1: Configure secret on router</strong><br>Execute command on all routers<br>R(config)# enable secret enpa55</p>
+                <p><strong>Step 2: Configure console password on router</strong><br>Execute command on all routers<br>R(config)# line console 0<br>R(config-line)# password conpa55<br>R(config-line)# login</p>
+                <p><strong>Step 3: Configure SSH login on router</strong><br>Execute command on all routers<br>R(config)# ip domain-name ccnasecurity.com<br>R(config)# username admin secret adminpa55<br>R(config)# line vty 0 4<br>R(config-line)# login local<br>R(config)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+                <p><strong>Step 4: Configure OSPF on routers</strong><br>Execute command on router 1<br>R1(config)# router ospf 1<br>R1(config-router)# network 192.168.1.0 0.0.0.255 area 0<br>R1(config-router)# network 10.1.1.0 0.0.0.3 area 0<br>Execute command on router 2<br>R2(config)# router ospf 1<br>R2(config-router)# network 10.1.1.0 0.0.0.3 area 0<br>R2(config-router)# network 10.2.2.0 0.0.0.3 area 0<br>Execute command on router 3<br>R3(config)# router ospf 1<br>R3(config-router)# network 10.2.2.0 0.0.0.3 area 0<br>R3(config-router)# network 192.168.3.0 0.0.0.255 area 0</p>
+
+                <h3>Part 2: Enable IOS IPS</h3>
+                <p><strong>Step 1: Enable the Security Technology package</strong><br>R1# show version<br>R1(config)# license boot module c1900 technology-package securityk9<br>(Type yes)<br>R1# copy run start<br>R1# reload<br>R1# show version</p>
+                <p><strong>Step 2: Verify network connectivity</strong><br>PCA> ping 192.168.3.2<br>(Successful)<br>PCC> ping 192.168.1.2<br>(Successful)</p>
+                <p><strong>Step 3: Create an IOS IPS configuration directory in flash</strong><br>R1# mkdir ipsdir<br>Create directory filename [ipsdir]? &lt;Enter&gt;</p>
+                <p><strong>Step 4: Configure the IPS signature storage location</strong><br>R1(config)# ip ips config location flash:ipsdir</p>
+                <p><strong>Step 5: Create an IPS rule</strong><br>R1(config)# ip ips name iosips</p>
+                <p><strong>Step 6: Enable logging</strong><br>R1(config)# ip ips notify log<br>R1# clock set hr:min:sec date month year<br>R1(config)# service timestamps log datetime msec<br>R1(config)# logging host 192.168.1.50</p>
+                <p><strong>Step 7: Configure IOS IPS to use the signature categories</strong><br>R1(config)# ip ips signature-category<br>R1(config-ips-category)# category all<br>R1(config-ips-category-action)# retired true<br>R1(config-ips-category-action)# exit<br>R1(config-ips-category)# category ios_ips basic<br>R1(config-ips-category-action)# retired false<br>R1(config-ips-category-action)# exit<br>R1(config-ips-category)# exit<br>Do you want to accept these changes? [confirm] &lt;Enter&gt;</p>
+                <p><strong>Step 8: Apply the IPS rule to an interface</strong><br>R1(config)# int gig0/0<br>R1(config-if)# ip ips iosips out</p>
+                <p><strong>Step 9: Use show commands to verify IPS</strong><br>R1# show ip ips all<br>(Output)</p>
+                <p><strong>Step 10: View the syslog messages</strong><br>Click the Syslog server->Services tab-> SYSLOG<br>(Output)</p>
+
+                <h3>Part 3: Modify the Signature</h3>
+                <p><strong>Step 1: Change the event-action of a signature</strong><br>R1(config)# ip ips signature-definition<br>R1(config-sigdef)# signature 2004 0<br>R1(config-sigdef-sig)# status<br>R1(config-sigdef-sig-status)# retired false<br>R1(config-sigdef-sig-status)# enabled true<br>R1(config-sigdef-sig-status)# exit<br>R1(config-sigdef-sig)# engine<br>R1(config-sigdef-sig-engine)# event-action produce-alert<br>R1(config-sigdef-sig-engine)# event-action deny-packet-inline<br>R1(config-sigdef-sig-engine)# exit<br>R1(config-sigdef-sig)# exit<br>R1(config-sigdef)# exit<br>Do you want to accept these changes? [confirm] &lt;Enter&gt;</p>
+                <p><strong>Step 2: Use show commands to verify IPS</strong><br>R1# show ip ips all<br>(Output)</p>
+                <p><strong>Step 3: Verify that IPS is working properly</strong><br>PCC> ping 192.168.1.2<br>(Unsuccessful – Request timed out)<br>PCA> ping 192.168.3.2<br>(Successful)</p>
+                <p><strong>Step 4: View the syslog messages</strong><br>Click the Syslog server->Services tab-> SYSLOG</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+
+        <!-- Practical 7 -->
+        <div class="card">
+            <h2>Practical 7: Secure Layer 2 Switches</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure root bridge, secure STP, and enable port security.</p>
+                <p><strong>Topology:</strong> R1, Central, SW1, SW2, SWA, SWB with client devices.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>192.168.1.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>Se0/1/0</td><td>209.165.200.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>C1</td><td>NIC</td><td>10.1.1.10</td><td>255.255.255.0</td><td>10.1.1.1</td></tr>
+                    <tr><td>C2</td><td>NIC</td><td>10.1.1.11</td><td>255.255.255.0</td><td>10.1.1.1</td></tr>
+                    <tr><td>C3</td><td>NIC</td><td>10.1.1.12</td><td>255.255.255.0</td><td>10.1.1.1</td></tr>
+                    <tr><td>C4</td><td>NIC</td><td>10.1.1.13</td><td>255.255.255.0</td><td>10.1.1.1</td></tr>
+                    <tr><td>D1</td><td>NIC</td><td>10.1.1.114</td><td>255.255.255.0</td><td>10.1.1.1</td></tr>
+                    <tr><td>D2</td><td>NIC</td><td>10.1.1.15</td><td>255.255.255.0</td><td>10.1.1.1</td></tr>
+                    <tr><td>D3</td><td>NIC</td><td>10.1.1.16</td><td>255.255.255.0</td><td>10.1.1.1</td></tr>
+                    <tr><td>D4</td><td>NIC</td><td>10.1.1.17</td><td>255.255.255.0</td><td>10.1.1.1</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Assign the Central switch as the root bridge.</li>
+                    <li>Secure spanning-tree parameters to prevent STP manipulation attacks.</li>
+                    <li>Enable port security to prevent CAM table overflow attacks.</li>
+                </ul>
+                <h3>Part 1: Configure Switch / Router</h3>
+                <p><strong>Step 1: Configure secret</strong><br>Execute command on all switches and router<br>R1/SW(config)# enable secret enpa55</p>
+                <p><strong>Step 2: Configure console password</strong><br>Execute command on all switches and router<br>R1/SW(config)# line console 0<br>R1/SW(config-line)# password conpa55<br>R1/SW(config-line)# login</p>
+                <p><strong>Step 3: Configure SSH login</strong><br>Execute command on all switches and router<br>R1/SW(config)# ip domain-name ccnasecurity.com<br>R1/SW(config)# username admin secret adminpa55<br>R1/SW(config)# line vty 0 4<br>R1/SW(config-line)# login local<br>R1/SW(config-line)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+
+                <h3>Part 2: Configure Root Bridge</h3>
+                <p><strong>Step 1: Determine the current root bridge</strong><br>Central# show spanning-tree<br>SW1# show spanning-tree</p>
+                <p><strong>Step 2: Assign Central as the primary root bridge</strong><br>Central(config)# spanning-tree vlan 1 root primary<br>Central# show spanning-tree</p>
+                <p><strong>Step 3: Assign SW-1 as a secondary root bridge</strong><br>SW1(config)# spanning-tree vlan 1 root secondary<br>SW1# show spanning-tree</p>
+
+                <h3>Part 3: Protect Against STP Attacks</h3>
+                <p><strong>Step 1: Enable PortFast on all access ports</strong><br>SWA/B(config)# int range fa0/1 - 4<br>SWA/B(config-if-range)# spanning-tree portfast</p>
+                <p><strong>Step 2: Enable BPDU guard on all access ports</strong><br>SWA/B(config)# int range fa0/1 - 4<br>SWA/B(config-if-range)# spanning-tree bpduguard enable</p>
+                <p><strong>Step 3: Enable root guard</strong><br>SW-1/2(config)# int range fa0/23 - 24<br>SW-1/2(config-if-range)# spanning-tree guard root</p>
+
+                <h3>Part 4: Configure Port Security and Disable Unused Ports</h3>
+                <p><strong>Step 1: Configure basic port security on all ports connected to host devices</strong><br>SW-A/B(config)# int range fa0/1 - 22<br>SW-A/B(config-if-range)# switchport mode access<br>SW-A/B(config-if-range)# switchport port-security<br>SW-A/B(config-if-range)# switchport port-security maximum 2<br>SW-A/B(config-if-range)# switchport port-security violation shutdown<br>SW-A/B(config-if-range)# switchport port-security mac-address sticky</p>
+                <p><strong>Step 2: Verify port security</strong><br>SW-A/B# show port-security int fa0/1</p>
+                <p><strong>Step 3: Disable unused ports</strong><br>SW-A/B(config)# int range fa0/5 - 22<br>SW-A/B(config-if-range)# shutdown</p>
+                <p><strong>Step 4: Verify Connectivity</strong><br>Ping C1->C2 (Successful)<br>Ping C1->D1 (Successful)</p>
+                <p><strong>Step 5: Verify port security</strong><br><em>No specific command provided; assume repeat of Step 2 verification.</em><br>SW-A/B# show port-security int fa0/1</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+
+        <!-- Practical 8 -->
+        <div class="card">
+            <h2>Practical 8: Layer 2 VLAN Security</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Secure trunk links, configure management VLAN, and restrict access with ACLs.</p>
+                <p><strong>Topology:</strong> R1, SW-1, SW-2, SWA, SWB, Central with client devices.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>-</td><td>-</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>se0/1/0</td><td>209.165.200.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>C2</td><td>NIC</td><td>192.168.10.1</td><td>255.255.255.0</td><td>192.168.10.100</td></tr>
+                    <tr><td>C3</td><td>NIC</td><td>192.168.10.2</td><td>255.255.255.0</td><td>192.168.10.100</td></tr>
+                    <tr><td>C4</td><td>NIC</td><td>192.168.5.1</td><td>255.255.255.0</td><td>192.168.5.100</td></tr>
+                    <tr><td>D1</td><td>NIC</td><td>192.168.5.2</td><td>255.255.255.0</td><td>192.168.5.100</td></tr>
+                    <tr><td>D2</td><td>NIC</td><td>192.168.5.3</td><td>255.255.255.0</td><td>192.168.5.100</td></tr>
+                    <tr><td>D3</td><td>NIC</td><td>192.168.5.4</td><td>255.255.255.0</td><td>192.168.5.100</td></tr>
+                    <tr><td>D4</td><td>NIC</td><td>192.168.10.3</td><td>255.255.255.0</td><td>192.168.10.100</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Connect a new redundant link between SW-1 and SW-2.</li>
+                    <li>Enable trunking and configure security on the new trunk link between SW-1 and SW-2.</li>
+                    <li>Create a new management VLAN (VLAN 20) and attach a management PC to that VLAN.</li>
+                    <li>Implement an ACL to prevent outside users from accessing the management VLAN.</li>
+                </ul>
+                <h3>Scenario</h3>
+                <p>A company’s network is currently set up using two separate VLANs: VLAN 5 and VLAN 10. In addition, all trunk ports are configured with native VLAN 15.</p>
+                <h3>Part 1: Configure Switch/Router</h3>
+                <p><strong>Step 1: Configure secret</strong><br>Execute command on all switches/router<br>SW/R1(config)# enable secret enpa55</p>
+                <p><strong>Step 2: Configure console password</strong><br>Execute command on all switches/router<br>SW/R1(config)# line console 0<br>SW/R1(config-line)# password conpa55<br>SW/R1(config-line)# login</p>
+                <p><strong>Step 3: Configure SSH login</strong><br>Execute command on all switches/router<br>SW/R1(config)# ip domain-name ccnasecurity.com<br>SW/R1(config)# username admin secret adminpa55<br>SW/R1(config)# line vty 0 4<br>SW/R1(config-line)# login local<br>SW/R1(config-line)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+
+                <h3>Part 2: Create VLAN and Assign Access Mode and Trunk Mode to Interfaces</h3>
+                <p><strong>Step 1: Check existing VLAN</strong><br>Execute command on all switches<br>SW# show vlan brief</p>
+                <p><strong>Step 2: Create new VLAN</strong><br>Execute command on all switches<br>SW(config)# vlan 5<br>SW(config-vlan)# exit<br>SW(config)# vlan 10<br>SW(config-vlan)# exit<br>SW(config)# vlan 15<br>SW(config-vlan)# exit</p>
+                <p><strong>Step 3: Check the new VLAN</strong><br>Execute command on all switches<br>SW# show vlan brief</p>
+                <p><strong>Step 4: Assign access mode to VLAN switch interfaces</strong><br>Execute command on switches SWA/SWB<br>SWA(config)# int fa0/2<br>SWA(config-if)# switchport mode access<br>SWA(config-if)# switchport access vlan 10<br>SWA(config)# int fa0/3<br>SWA(config-if)# switchport mode access<br>SWA(config-if)# switchport access vlan 10<br>SWA(config)# int fa0/4<br>SWA(config-if)# switchport mode access<br>SWA(config-if)# switchport access vlan 5<br>SWB(config)# int fa0/1<br>SWB(config-if)# switchport mode access<br>SWB(config-if)# switchport access vlan 5<br>SWB(config)# int fa0/2<br>SWB(config-if)# switchport mode access<br>SWB(config-if)# switchport access vlan 5<br>SWB(config)# int fa0/3<br>SWB(config-if)# switchport mode access<br>SWB(config-if)# switchport access vlan 5<br>SWB(config)# int fa0/4<br>SWB(config-if)# switchport mode access<br>SWB(config-if)# switchport access vlan 10</p>
+                <p><strong>Step 5: Check the access mode allocations</strong><br>SWA# show vlan brief<br>SWB# show vlan brief</p>
+                <p><strong>Step 6: Assign trunk mode to other switch interfaces</strong><br>SWA(config)# int fa0/24<br>SWA(config-if)# switchport mode trunk<br>SWA(config-if)# switchport trunk native vlan 15<br>SWB(config)# int fa0/24<br>SWB(config-if)# switchport mode trunk<br>SWB(config-if)# switchport trunk native vlan 15<br>SW1(config)# int fa0/24<br>SW1(config-if)# switchport mode trunk<br>SW1(config-if)# switchport trunk native vlan 15<br>SW1(config)# int gig0/1<br>SW1(config-if)# switchport mode trunk<br>SW1(config-if)# switchport trunk native vlan 15<br>SW2(config)# int fa0/24<br>SW2(config-if)# switchport mode trunk<br>SW2(config-if)# switchport trunk native vlan 15<br>SW2(config)# int gig0/1<br>SW2(config-if)# switchport mode trunk<br>SW2(config-if)# switchport trunk native vlan 15<br>Central(config)# int range gig0/1-2<br>Central(config-if-range)# switchport mode trunk<br>Central(config-if-range)# switchport trunk native vlan 15<br>Central(config)# int fa0/1<br>Central(config-if)# switchport mode trunk<br>Central(config-if)# switchport trunk native vlan 15</p>
+                <p><strong>Step 7: Check the trunk mode allocations</strong><br>Central# show int trunk<br>SW1/2# show int trunk<br>SWA/B# show int trunk</p>
+                <p><strong>Step 8: Create sub-interfaces on router to support VLAN</strong><br>R1(config)# int gig0/0.1<br>R1(config-subif)# encapsulation dot1q 5<br>R1(config-subif)# ip address 192.168.5.100 255.255.255.0<br>R1(config)# int gig0/0.2<br>R1(config-subif)# encapsulation dot1q 10<br>R1(config-subif)# ip address 192.168.10.100 255.255.255.0<br>R1(config)# int gig0/0.15<br>R1(config-subif)# encapsulation dot1q 15<br>R1(config-subif)# ip address 192.168.15.100 255.255.255.0</p>
+
+                <h3>Part 3: Verify Connectivity</h3>
+                <p><strong>Step 1: Verify connectivity between C2 (VLAN 10) and C3 (VLAN 10)</strong><br>C2> ping 192.168.10.2<br>(Successful)</p>
+                <p><strong>Step 2: Verify connectivity between C2 (VLAN 10) and D1 (VLAN 5)</strong><br>PC2> ping 192.168.5.2<br>(Successful)</p>
+
+                <h3>Part 4: Create a Redundant Link between SW-1 and SW-2</h3>
+                <p><strong>Step 1: Connect SW-1 and SW-2</strong><br>Using a crossover cable, connect port Fa0/23 on SW-1 to port Fa0/23 on SW-2.</p>
+                <p><strong>Step 2: Enable trunking, including all trunk security mechanisms on the link between SW-1 and SW-2</strong><br>(Execute command on SW-1 and SW-2)<br>SW1/2(config)# int fa0/23<br>SW1/2(config-if)# switchport mode trunk<br>SW1/2(config-if)# switchport trunk native vlan 15<br>SW1/2(config-if)# switchport nonegotiate</p>
+
+                <h3>Part 5: Enable VLAN 20 as a Management VLAN</h3>
+                <p><strong>Step 1: Enable a management VLAN (VLAN 20) on SW-A</strong><br>SW-A(config)# vlan 20<br>SW-A(config-vlan)# exit<br>SW-A(config)# int vlan 20<br>SW-A(config-if)# ip address 192.168.20.1 255.255.255.0</p>
+                <p><strong>Step 2: Enable the same management VLAN on all other switches</strong><br>(Execute command on SW-B, SW-1, SW-2, and Central)<br>SW(config)# vlan 20<br>SW(config-vlan)# exit<br>SW-B(config)# int vlan 20<br>SW-B(config-if)# ip address 192.168.20.2 255.255.255.0<br>SW-1(config)# int vlan 20<br>SW-1(config-if)# ip address 192.168.20.3 255.255.255.0<br>SW-2(config)# int vlan 20<br>SW-2(config-if)# ip address 192.168.20.4 255.255.255.0<br>Central(config)# int vlan 20<br>Central(config-if)# ip address 192.168.20.5 255.255.255.0</p>
+                <p><strong>Step 3: Connect and configure the management PC</strong><br>Connect the management PC using copper straight-through to SW-A port Fa0/1 and ensure that it is assigned an available IP address 192.168.20.50</p>
+                <p><strong>Step 4: On SW-A, ensure the management PC is part of VLAN 20</strong><br>SW-A(config)# int fa0/1<br>SW-A(config)# switchport mode access<br>SW-A(config-if)# switchport access vlan 20</p>
+                <p><strong>Step 5: Verify connectivity of the management PC to all switches</strong><br>C1> ping 192.168.20.1 (SW-A)<br>(Successful)<br>C1> ping 192.168.20.2 (SW-B)<br>(Successful)<br>C1> ping 192.168.20.3 (SW-1)<br>(Successful)<br>C1> ping 192.168.20.4 (SW-2)<br>(Successful)<br>C1> ping 192.168.20.5 (Central)<br>(Successful)</p>
+
+                <h3>Part 6: Enable the Management PC to Access Router R1</h3>
+                <p><strong>Step 1: Enable a new subinterface on router R1</strong><br>R1(config)# int gig0/0.3<br>R1(config-subif)# encapsulation dot1q 20<br>R1(config-subif)# ip address 192.168.20.100 255.255.255.0</p>
+                <p><strong>Step 2: Set default gateway in management PC</strong><br>C1 – 192.168.20.100</p>
+                <p><strong>Step 3: Verify connectivity between the management PC and R1</strong><br>C1> ping 192.168.20.100<br>(Successful)</p>
+                <p><strong>Step 4: Enable security</strong><br>R1(config)# access-list 101 deny ip any 192.168.20.0 0.0.0.255<br>R1(config)# access-list 101 permit ip any any<br>R1(config)# access-list 102 permit ip host 192.168.20.50 any</p>
+                <p><strong>Step 5: Apply ACL on correct interfaces</strong><br>R1(config)# int gig0/0.1<br>R1(config-subif)# ip access-group 101 in<br>R1(config-subif)# int gig0/0.2<br>R1(config-subif)# ip access-group 101 in<br>R1(config-subif)# line vty 0 4<br>R1(config-line)# access-class 102 in</p>
+                <p><strong>Step 6: Verify connectivity between the management PC and SW-A, SW-B and R1</strong><br>C1> ping 192.168.20.1 (SW-A)<br>(Successful)<br>C1> ping 192.168.20.2 (SW-B)<br>(Successful)<br>C1> ping 192.168.20.100 (R1)<br>(Successful)</p>
+                <p><strong>Step 7: Verify connectivity between the D1 and management PC</strong><br>D1> ping 192.168.20.50<br><em>(Output not specified; likely unsuccessful due to ACL)</em></p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+
+        <!-- Practical 9 -->
+        <div class="card">
+            <h2>Practical 9: Configure Site-to-Site IPsec VPN</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure and verify a site-to-site IPsec VPN between R1 and R3.</p>
+                <p><strong>Topology:</strong> R1, R2, R3, PC-A, PC-B, PC-C with specific IP configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>192.168.1.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>Se0/1/0</td><td>10.1.1.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>gig0/0</td><td>192.168.2.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/0</td><td>10.1.1.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/1</td><td>10.2.2.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>gig0/0</td><td>192.168.3.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>Se0/1/0</td><td>10.2.2.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>PC-A</td><td>NIC</td><td>192.168.1.3</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+                    <tr><td>PC-B</td><td>NIC</td><td>192.168.2.3</td><td>255.255.255.0</td><td>192.168.2.1</td></tr>
+                    <tr><td>PC-C</td><td>NIC</td><td>192.168.3.3</td><td>255.255.255.0</td><td>192.168.3.1</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Verify connectivity throughout the network.</li>
+                    <li>Configure R1 to support a site-to-site IPsec VPN with R3.</li>
+                </ul>
+                <h3>Part 1: Configure Router</h3>
+                <p><strong>Step 1: Configure secret on router</strong><br>Execute command on all routers<br>R(config)# enable secret enpa55</p>
+                <p><strong>Step 2: Configure console password on router</strong><br>Execute command on all routers<br>R(config)# line console 0<br>R(config-line)# password conpa55<br>R(config-line)# login</p>
+                <p><strong>Step 3: Configure SSH login on router</strong><br>Execute command on all routers<br>R(config)# ip domain-name ccnasecurity.com<br>R(config)# username admin secret adminpa55<br>R(config)# line vty 0 4<br>R(config-line)# login local<br>R(config)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+                <p><strong>Step 4: Configure OSPF on routers</strong><br>R1(config)# router ospf 1<br>R1(config-router)# network 192.168.1.0 0.0.0.255 area 0<br>R1(config-router)# network 10.1.1.0 0.0.0.3 area 0<br>R2(config)# router ospf 1<br>R2(config-router)# network 192.168.2.0 0.0.0.255 area 0<br>R2(config-router)# network 10.2.2.0 0.0.0.3 area 0<br>R2(config-router)# network 10.1.1.0 0.0.0.3 area 0<br>R3(config)# router ospf 1<br>R3(config-router)# network 192.168.3.0 0.0.0.255 area 0<br>R3(config-router)# network 10.2.2.0 0.0.0.3 area 0</p>
+
+                <h3>Part 2: Configure IPsec Parameters on R1</h3>
+                <p><strong>Step 1: From PC-A, verify connectivity to PC-C and PC-B</strong><br>PCA> ping 192.168.3.3<br>(Successful)<br>PCA> ping 192.168.2.3<br>(Successful)<br>PCB> ping 192.168.3.3<br>(Successful)</p>
+                <p><strong>Step 2: Check if the Security Technology package is enabled</strong><br>R1# show version</p>
+                <p><strong>Step 3: Enable the Security Technology package</strong><br>R1(config)# license boot module c1900 technology-package securityk9</p>
+                <p><strong>Step 4: Save the running config and reload the router to enable the security license</strong><br>R1# copy run start<br>R1# reload</p>
+                <p><strong>Step 5: Verify the Security Technology package is enabled</strong><br>R1# show version</p>
+                <p><strong>Step 6: Identify interesting traffic on R1</strong><br>R1(config)# access-list 110 permit ip 192.168.1.0 0.0.0.255 192.168.3.0 0.0.0.255</p>
+                <p><strong>Step 7: Configure the IKE Phase 1 ISAKMP policy on R1</strong><br>R1(config)# crypto isakmp policy 10<br>R1(config-isakmp)# encryption aes 256<br>R1(config-isakmp)# authentication pre-share<br>R1(config-isakmp)# group 5<br>R1(config-isakmp)# exit<br>R1(config)# crypto isakmp key vpnpa55 address 10.2.2.2</p>
+                <p><strong>Step 8: Configure the IKE Phase 2 IPsec policy on R1</strong><br>R1(config)# crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac<br>R1(config)# crypto map VPN-MAP 10 ipsec-isakmp<br>R1(config-crypto-map)# description VPN connection to R3<br>R1(config-crypto-map)# set peer 10.2.2.2<br>R1(config-crypto-map)# set transform-set VPN-SET<br>R1(config-crypto-map)# match address 110<br>R1(config-crypto-map)# exit</p>
+                <p><strong>Step 9: Configure the crypto map on the outgoing interface</strong><br>R1(config)# int se0/1/0<br>R1(config-if)# crypto map VPN-MAP</p>
+
+                <h3>Part 3: Configure IPsec Parameters on R3</h3>
+                <p><strong>Step 1: Check if the Security Technology package is enabled</strong><br>R3# show version</p>
+                <p><strong>Step 2: Enable the Security Technology package</strong><br>R3(config)# license boot module c1900 technology-package securityk9</p>
+                <p><strong>Step 3: Save the running config and reload the router to enable the security license</strong><br>R3# copy run start<br>R3# reload</p>
+                <p><strong>Step 4: Verify the Security Technology package is enabled</strong><br>R3# show version</p>
+                <p><strong>Step 5: Configure router R3 to support a site-to-site VPN with R1</strong><br>R3(config)# access-list 110 permit ip 192.168.3.0 0.0.0.255 192.168.1.0 0.0.0.255</p>
+                <p><strong>Step 6: Configure the IKE Phase 1 ISAKMP properties on R3</strong><br>R3(config)# crypto isakmp policy 10<br>R3(config-isakmp)# encryption aes 256<br>R3(config-isakmp)# authentication pre-share<br>R3(config-isakmp)# group 5<br>R3(config-isakmp)# exit<br>R3(config)# crypto isakmp key vpnpa55 address 10.1.1.2</p>
+                <p><strong>Step 7: Configure the IKE Phase 2 IPsec policy on R3</strong><br>R3(config)# crypto ipsec transform-set VPN-SET esp-aes esp-sha-hmac<br>R3(config)# crypto map VPN-MAP 10 ipsec-isakmp<br>R3(config-crypto-map)# description VPN connection to R1<br>R3(config-crypto-map)# set peer 10.1.1.2<br>R3(config-crypto-map)# set transform-set VPN-SET<br>R3(config-crypto-map)# match address 110<br>R3(config-crypto-map)# exit</p>
+                <p><strong>Step 8: Configure the crypto map on the outgoing interface</strong><br>R3(config)# int se0/1/0<br>R3(config-if)# crypto map VPN-MAP</p>
+
+                <h3>Part 4: Verify the IPsec VPN</h3>
+                <p><strong>Step 1: Verify the tunnel prior to interesting traffic</strong><br>R1# show crypto ipsec sa</p>
+                <p><strong>Step 2: Create interesting traffic</strong><br>PCC> ping 192.168.1.3<br>(Successful)</p>
+                <p><strong>Step 3: Verify the tunnel after interesting traffic</strong><br>R1# show crypto ipsec sa</p>
+                <p><strong>Step 4: Create uninteresting traffic</strong><br>PCB> ping 192.168.1.3<br>(Successful)<br>R1# ping 192.168.3.3<br>(Successful)<br>R3# ping 192.168.1.3<br>(Successful)</p>
+                <p><strong>Step 5: Verify the tunnel</strong><br>R1# show crypto ipsec sa</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+
+        <!-- Practical 10 -->
+        <div class="card">
+            <h2>Practical 10: Configure Cisco ASA Firewall</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure and verify ASA settings, routing, NAT, DHCP, AAA, SSH, and DMZ.</p>
+                <p><strong>Topology:</strong> R1, R2, R3, ASA, DMZ Server, PC-B, PC-C with specific IP configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>209.165.200.225</td><td>255.255.255.248</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>Se0/1/0</td><td>10.1.1.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/0</td><td>10.1.1.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R2</td><td>Se0/1/1</td><td>10.2.2.2</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>gig0/0</td><td>172.16.3.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>R3</td><td>Se0/1/0</td><td>10.2.2.1</td><td>255.255.255.252</td><td>N/A</td></tr>
+                    <tr><td>ASA</td><td>VLAN 1 (Et0/1)</td><td>192.168.1.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>ASA</td><td>VLAN 2 (Et0/0)</td><td>209.165.200.226</td><td>255.255.255.248</td><td>N/A</td></tr>
+                    <tr><td>ASA</td><td>VLAN 3 (Et0/2)</td><td>192.168.2.1</td><td>255.255.255.0</td><td>N/A</td></tr>
+                    <tr><td>DMZ Server</td><td>NIC</td><td>192.168.2.3</td><td>255.255.255.0</td><td>192.168.2.1</td></tr>
+                    <tr><td>PC-B</td><td>NIC</td><td>192.168.1.3</td><td>255.255.255.0</td><td>192.168.1.1</td></tr>
+                    <tr><td>PC-C</td><td>NIC</td><td>172.16.3.3</td><td>255.255.255.0</td><td>172.16.3.1</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Verify connectivity and explore the ASA.</li>
+                    <li>Configure basic ASA settings and interface security levels using CLI.</li>
+                    <li>Configure routing, address translation, and inspection policy using CLI.</li>
+                    <li>Configure DHCP, AAA, and SSH.</li>
+                    <li>Configure a DMZ, Static NAT, and ACLs.</li>
+                </ul>
+                <h3>Part 1: Configure Router</h3>
+                <p><strong>Step 1: Configure secret on router</strong><br>Execute command on all routers<br>R(config)# enable secret enpa55</p>
+                <p><strong>Step 2: Configure console password on router</strong><br>Execute command on all routers<br>R(config)# line console 0<br>R(config-line)# password conpa55<br>R(config-line)# login</p>
+                <p><strong>Step 3: Configure SSH login on router</strong><br>Execute command on all routers<br>R(config)# ip domain-name ccnasecurity.com<br>R(config)# username admin secret pa55<br>R(config)# line vty 0 4<br>R(config-line)# login local<br>R(config)# crypto key generate rsa<br>How many bits in the modulus [512]: 1024</p>
+                <p><strong>Step 4: Configure OSPF on routers</strong><br>Execute command on all routers<br>R1(config)# router ospf 1<br>R1(config-router)# network 209.165.200.0 0.0.0.7 area 0<br>R1(config-router)# network 10.1.1.0 0.0.0.3 area 0<br>R2(config)# router ospf 1<br>R2(config-router)# network 10.1.1.0 0.0.0.3 area 0<br>R2(config-router)# network 10.2.2.0 0.0.0.3 area 0<br>R3(config)# router ospf 1<br>R3(config-router)# network 172.16.3.0 0.0.0.255 area 0<br>R3(config-router)# network 10.2.2.0 0.0.0.3 area 0</p>
+
+                <h3>Part 2: Verify Connectivity and Explore the ASA</h3>
+                <p><strong>Step 1: Verify connectivity</strong><br>Send packets from:<br>PCC -> R1, R2, R3<br>(Successful)<br>Send packets from:<br>PCC -> ASA, PC-B, DMZ server<br>(Unsuccessful)</p>
+                <p><strong>Step 2: Determine the ASA version, interfaces, and license</strong><br>Enter privileged EXEC mode. A password has not been set. Press Enter when prompted for a password.<br>ASA# show version</p>
+                <p><strong>Step 3: Determine the file system and contents of flash memory</strong><br>ASA# show file system<br>ASA# show flash:</p>
+
+                <h3>Part 3: Configure ASA Settings and Interface Security Using the CLI</h3>
+                <p><strong>Step 1: Configure the hostname and domain name</strong><br>ASA(config)# hostname CCNAS-ASA<br>CCNAS-ASA(config)# domain-name ccnasecurity.com</p>
+                <p><strong>Step 2: Configure the enable mode password</strong><br>CCNAS-ASA(config)# enable password enpa55</p>
+                <p><strong>Step 3: Set the date and time (your current time)</strong><br>CCNAS-ASA(config)# clock set 21:24:00 31 March 2022</p>
+                <p><strong>Step 4: Configure the inside and outside interfaces</strong><br>CCNAS-ASA(config)# int vlan 1<br>CCNAS-ASA(config-if)# nameif inside<br>CCNAS-ASA(config-if)# ip address 192.168.1.1 255.255.255.0<br>CCNAS-ASA(config-if)# security-level 100<br>CCNAS-ASA(config-if)# int vlan 2<br>CCNAS-ASA(config-if)# nameif outside<br>CCNAS-ASA(config-if)# ip address 209.165.200.226 255.255.255.248<br>CCNAS-ASA(config-if)# security-level 0</p>
+                <p><strong>Step 5: Check the configurations</strong><br>CCNAS-ASA# show int ip brief<br>CCNAS-ASA# show ip address<br>CCNAS-ASA# show switch vlan</p>
+                <p><strong>Step 6: Test connectivity to the ASA (Send packets)</strong><br>PCB -> ASA<br>(Successful)<br>PCB -> R1<br>(Unsuccessful)</p>
+
+                <h3>Part 4: Configure Routing, Address Translation, and Inspection Policy Using the CLI</h3>
+                <p><strong>Step 1: Configure a static default route for the ASA</strong><br>CCNAS-ASA# show route<br>CCNAS-ASA(config)# route outside 0.0.0.0 0.0.0.0 209.165.200.225<br>CCNAS-ASA# show route</p>
+                <p><strong>Step 2: Test connectivity (Send packets)</strong><br>ASA -> R1<br>(Successful)</p>
+                <p><strong>Step 3: Configure address translation using PAT and network objects</strong><br>CCNAS-ASA(config)# object network inside-net<br>CCNAS-ASA(config-network-object)# subnet 192.168.1.0 255.255.255.0<br>CCNAS-ASA(config-network-object)# nat (inside,outside) dynamic interface<br>CCNAS-ASA(config-network-object)# end</p>
+                <p><strong>Step 4: Test connectivity</strong><br>CCNAS-ASA# show run<br>PCB -> R1 (Send packets)<br>(Unsuccessful)<br>CCNAS-ASA# show nat</p>
+                <p><strong>Step 5: Modify the default MPF application inspection global service policy</strong><br>CCNAS-ASA(config)# class-map inspection_default<br>CCNAS-ASA(config-cmap)# match default-inspection-traffic<br>CCNAS-ASA(config-cmap)# exit<br>CCNAS-ASA(config)# policy-map global_policy<br>CCNAS-ASA(config-pmap)# class inspection_default<br>CCNAS-ASA(config-pmap-c)# inspect icmp<br>CCNAS-ASA(config-pmap-c)# exit<br>CCNAS-ASA(config)# service-policy global_policy global</p>
+                <p><strong>Step 6: Test connectivity (Send packets)</strong><br>PCB -> R1<br>(Successful)</p>
+
+                <h3>Part 5: Configure DHCP, AAA, and SSH</h3>
+                <p><strong>Step 1: Configure the ASA as a DHCP server</strong><br>CCNAS-ASA(config)# dhcpd address 192.168.1.5-192.168.1.36 inside<br>CCNAS-ASA(config)# dhcpd dns 209.165.201.2 int inside<br>CCNAS-ASA(config)# dhcpd enable inside<br>Change PC-B from a static IP address to a DHCP client, and verify that it receives IP addressing information.</p>
+                <p><strong>Step 2: Configure AAA to use the local database for authentication</strong><br>CCNAS-ASA(config)# username admin password adminpa55<br>CCNAS-ASA(config)# aaa authentication ssh console LOCAL</p>
+                <p><strong>Step 3: Configure remote access to the ASA</strong><br>CCNAS-ASA(config)# crypto key generate rsa modulus 1024<br>Do you really want to replace them? [yes/no]: no<br>CCNAS-ASA(config)# ssh 192.168.1.0 255.255.255.0 inside<br>CCNAS-ASA(config)# ssh 172.16.3.3 255.255.255.255 outside<br>CCNAS-ASA(config)# ssh timeout 10</p>
+                <p><strong>Step 4: Verify SSH session</strong><br>PCB> ssh –l admin 192.168.1.1<br>Password: adminpa55<br>CCNAS-ASA> exit</p>
+
+                <h3>Part 6: Configure a DMZ, Static NAT, and ACLs</h3>
+                <p><strong>Step 1: Configure the DMZ interface VLAN 3 on the ASA</strong><br>CCNAS-ASA(config)# int vlan 3<br>CCNAS-ASA(config-if)# ip address 192.168.2.1 255.255.255.0<br>CCNAS-ASA(config-if)# no forward int vlan 1<br>CCNAS-ASA(config-if)# nameif dmz<br>CCNAS-ASA(config-if)# security-level 70<br>CCNAS-ASA(config-if)# int et0/2<br>CCNAS-ASA(config-if)# switchport access vlan 3</p>
+                <p><strong>Step 2: Check the configurations</strong><br>CCNAS-ASA# show int ip brief<br>CCNAS-ASA# show ip address<br>CCNAS-ASA# show switch vlan</p>
+                <p><strong>Step 3: Configure static NAT to the DMZ server using a network object</strong><br>CCNAS-ASA(config)# object network dmz-server<br>CCNAS-ASA(config-network-object)# host 192.168.2.3<br>CCNAS-ASA(config-network-object)# nat (dmz,outside) static 209.165.200.227<br>CCNAS-ASA(config-network-object)# exit</p>
+                <p><strong>Step 4: Configure an ACL to allow access to the DMZ server from the Internet</strong><br>CCNAS-ASA(config)# access-list OUTSIDE-DMZ permit icmp any host 192.168.2.3<br>CCNAS-ASA(config)# access-list OUTSIDE-DMZ permit tcp any host 192.168.2.3 eq 80<br>CCNAS-ASA(config)# access-group OUTSIDE-DMZ in int outside</p>
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+           </div>
+    
+           <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const buttons = document.querySelectorAll('.read-more');
+                
+                buttons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const card = button.closest('.card');
+                        const fullContent = card.querySelector('.full-content');
+        
+                        if (!fullContent) {
+                            console.error('Full content not found for this card');
+                            return;
+                        }
+        
+                        // Toggle visibility
+                        if (fullContent.style.display === 'block') {
+                            fullContent.style.display = 'none';
+                            button.textContent = 'Read More';
+                        } else {
+                            fullContent.style.display = 'block';
+                            button.textContent = 'Read Less';
+                        }
+                    });
+                });
+            });
+        </script>
+</body>
+</html>
