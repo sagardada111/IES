@@ -41,6 +41,14 @@
 }
 </style>
 <body>
+    <script>
+        var correctPassword = "12345"; // Change this to your desired password
+        var userInput = prompt("Enter the password to access this page:");
+        if (userInput !== correctPassword) {
+            alert("Incorrect password!");
+            window.location.href = "about:blank"; // Redirect to blank page on wrong password
+        }
+    </script>
     <header>
         <h1>Security In Computing Practicals</h1>
     </header>
@@ -766,8 +774,192 @@
             <button class="read-more">Read More</button>
         </div>
            </div>
+
+
+
+           <!-- Practical 11 -->
+            <h1>Extra Practical</h1>
+        <div class="card">
+            <h2>Practical 11: Configure ACLs on R1 for FTP and HTTP</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure an ACL on R1 to permit FTP access from PC1 and HTTP access from PC2.</p>
+                <p><strong>Topology:</strong> R1, Server, PC1, PC2 with IPv4 configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IP Address</th><th>Subnet Mask</th><th>Default Gateway</th></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>172.22.34.65</td><td>255.255.255.224</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>gig0/1</td><td>172.22.34.97</td><td>255.255.255.240</td><td>N/A</td></tr>
+                    <tr><td>R1</td><td>gig0/2</td><td>172.22.34.1</td><td>255.255.255.192</td><td>N/A</td></tr>
+                    <tr><td>Server</td><td>NIC</td><td>172.22.34.62</td><td>255.255.255.192</td><td>172.22.34.1</td></tr>
+                    <tr><td>PC1</td><td>NIC</td><td>172.22.34.66</td><td>255.255.255.224</td><td>172.22.34.65</td></tr>
+                    <tr><td>PC2</td><td>NIC</td><td>172.22.34.98</td><td>255.255.255.240</td><td>172.22.34.97</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Configure IP addresses on R1, Server, PC1, and PC2.</li>
+                    <li>Configure an ACL on R1 to permit FTP from PC1 and HTTP from PC2 to the Server.</li>
+                    <li>Verify the ACL implementation.</li>
+                </ul>
+                <h3>Steps</h3>
+                <h4>Step 1: Configure IP Addresses</h4>
+                <p><strong>Server</strong><br>Desktop > IP Configuration<br>IP Address: 172.22.34.62<br>Subnet Mask: 255.255.255.192<br>Default Gateway: 172.22.34.1</p>
+                <p><strong>PC1</strong><br>Desktop > IP Configuration<br>IP Address: 172.22.34.66<br>Subnet Mask: 255.255.255.224<br>Default Gateway: 172.22.34.65</p>
+                <p><strong>PC2</strong><br>Desktop > IP Configuration<br>IP Address: 172.22.34.98<br>Subnet Mask: 255.255.255.240<br>Default Gateway: 172.22.34.97</p>
+                <p><strong>R1</strong><br>enable<br>configure terminal<br>interface gigabitEthernet0/0<br>ip address 172.22.34.65 255.255.255.224<br>no shutdown<br>exit<br>interface gigabitEthernet0/1<br>ip address 172.22.34.97 255.255.255.240<br>no shutdown<br>exit<br>interface gigabitEthernet0/2<br>ip address 172.22.34.1 255.255.255.192<br>no shutdown<br>exit</p>
+
+                <h4>Step 2: Configure Services on Server</h4>
+                <p><strong>Server</strong><br>Desktop > Services<br>FTP: ON<br>- Add a test file (e.g., "test.txt")<br>HTTP: ON<br>- Add a simple index.html file</p>
+
+                <h4>Step 3: Configure ACL on R1</h4>
+                <p><strong>Create and Apply ACL</strong><br>R1(config)# access-list 100 permit tcp host 172.22.34.66 host 172.22.34.62 eq ftp<br>R1(config)# access-list 100 permit tcp host 172.22.34.98 host 172.22.34.62 eq www<br>R1(config)# access-list 100 deny ip any any<br>R1(config)# exit<br>R1(config)# interface gigabitEthernet0/0<br>R1(config-if)# ip access-group 100 in<br>R1(config-if)# exit<br>R1(config)# interface gigabitEthernet0/1<br>R1(config-if)# ip access-group 100 in<br>R1(config-if)# exit</p>
+                <p><em>Notes:</em><br>- <code>eq ftp</code> permits FTP (port 21)<br>- <code>eq www</code> permits HTTP (port 80)<br>- The implicit deny is made explicit with <code>deny ip any any</code><br>- ACL is applied inbound on G0/0 (PC1) and G0/1 (PC2) to control traffic from PCs to Server</p>
+
+                <h4>Step 4: Verification</h4>
+                <p><strong>Test FTP from PC1</strong><br>Desktop > Command Prompt<br>PC1> ftp 172.22.34.62<br>(Should connect successfully)<br>Try <code></code> to verify file transfer<br>Exit FTP with <code>Quit</code></p>
+                <p><strong>Test HTTP from PC2</strong><br>Desktop > Web Browser<br>Enter <code>http://172.22.34.62</code><br>(Should display the webpage)</p>
+                <p><strong>Test Restrictions</strong><br>From PC1: Try <code>http://172.22.34.62</code> in Web Browser (Should fail)<br>From PC2: Try <code>ftp 172.22.34.62</code> in Command Prompt (Should fail)</p>
+                <p><strong>Test Connectivity</strong><br>From PC1: <code>ping 172.22.34.62</code> (Should fail due to deny rule)<br>From PC2: <code>ping 172.22.34.62</code> (Should fail due to deny rule)</p>
+                <p><strong>Verify ACL on R1</strong><br>R1# show access-lists<br>(Should show matches on permit statements for FTP and HTTP)</p>
+
+               
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
     
+
+        <!-- Practical 12 -->
+        <div class="card">
+            <h2>Practical 12: Configure IPv6 ACLs on R3</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure static routing and apply IPv6 ACLs to block HTTP and HTTPS access on R3.</p>
+                <p><strong>Topology:</strong> R1, R2, R3, Server, PCA, PCB with IPv6 configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IPv6 Address/Prefix</th><th>Default Gateway</th></tr>
+                    <tr><td>Server</td><td>NIC</td><td>2001:DB8:1:10::30/64</td><td>FE80::1</td></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>2001:DB8:1:10::1/64</td><td>FE80::1</td></tr>
+                    <tr><td>R1</td><td>se0/1/0</td><td>2001:DB8:1:1::1/64</td><td>FE80::1</td></tr>
+                    <tr><td>R2</td><td>se0/1/0</td><td>2001:DB8:1:1::2/64</td><td>FE80::2</td></tr>
+                    <tr><td>R2</td><td>se0/1/1</td><td>2001:DB8:1:2::2/64</td><td>FE80::2</td></tr>
+                    <tr><td>R3</td><td>gig0/0</td><td>2001:DB8:1:30::1/64</td><td>FE80::3</td></tr>
+                    <tr><td>R3</td><td>gig0/1</td><td>2001:DB8:1:31::1/64</td><td>FE80::3</td></tr>
+                    <tr><td>R3</td><td>se0/1/0</td><td>2001:DB8:1:2::1/64</td><td>FE80::3</td></tr>
+                    <tr><td>PCA</td><td>NIC</td><td>2001:DB8:1:30::10/64</td><td>FE80::3</td></tr>
+                    <tr><td>PCB</td><td>NIC</td><td>2001:DB8:1:31::11/64</td><td>FE80::3</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Configure static routing across R1, R2, and R3.</li>
+                    <li>Configure and verify an IPv6 ACL to block HTTP access on R3.</li>
+                    <li>Configure and verify an IPv6 ACL to block HTTPS access on R3.</li>
+                </ul>
+                <h3>Steps</h3>
+                <h4>Step 1: Configure IP Addresses</h4>
+                <p><strong>Server</strong><br>Desktop &gt; IP Configuration<br>IPv6 Address: 2001:DB8:1:10::30<br>Prefix Length: 64<br>Link Local Address: FE80::1<br>Default Gateway: 2001:DB8:1:10::1</p>
+                <p><strong>PCA</strong><br>Desktop &gt; IP Configuration<br>IPv6 Address: 2001:DB8:1:30::10<br>Prefix Length: 64<br>Link Local Address: FE80::3<br>Default Gateway: 2001:DB8:1:30::1</p>
+                <p><strong>PCB</strong><br>Desktop &gt; IP Configuration<br>IPv6 Address: 2001:DB8:1:31::11<br>Prefix Length: 64<br>Link Local Address: FE80::3<br>Default Gateway: 2001:DB8:1:31::1</p>
+                <p><strong>R1</strong><br>enable<br>configure terminal<br>interface gigabitEthernet0/0<br>ipv6 address 2001:DB8:1:10::1/64<br>ipv6 address FE80::1 link-local<br>no shutdown<br>exit<br>interface serial0/1/0<br>ipv6 address 2001:DB8:1:1::1/64<br>ipv6 address FE80::1 link-local<br>no shutdown<br>exit</p>
+                <p><strong>R2</strong><br>enable<br>configure terminal<br>interface serial0/1/0<br>ipv6 address 2001:DB8:1:1::2/64<br>ipv6 address FE80::2 link-local<br>no shutdown<br>exit<br>interface serial0/1/1<br>ipv6 address 2001:DB8:1:2::2/64<br>ipv6 address FE80::2 link-local<br>no shutdown<br>exit</p>
+                <p><strong>R3</strong><br>enable<br>configure terminal<br>interface gigabitEthernet0/0<br>ipv6 address 2001:DB8:1:30::1/64<br>ipv6 address FE80::3 link-local<br>no shutdown<br>exit<br>interface gigabitEthernet0/1<br>ipv6 address 2001:DB8:1:31::1/64<br>ipv6 address FE80::3 link-local<br>no shutdown<br>exit<br>interface serial0/1/0<br>ipv6 address 2001:DB8:1:2::1/64<br>ipv6 address FE80::3 link-local<br>no shutdown<br>exit</p>
+
+                <h4>Step 2: Configure Static Routing</h4>
+                <p><strong>R1</strong><br>ipv6 unicast-routing<br>ipv6 route 2001:DB8:1:30::/64 2001:DB8:1:1::2<br>ipv6 route 2001:DB8:1:31::/64 2001:DB8:1:1::2</p>
+                <p><strong>R2</strong><br>ipv6 unicast-routing<br>ipv6 route 2001:DB8:1:10::/64 2001:DB8:1:1::1<br>ipv6 route 2001:DB8:1:30::/64 2001:DB8:1:2::1<br>ipv6 route 2001:DB8:1:31::/64 2001:DB8:1:2::1</p>
+                <p><strong>R3</strong><br>ipv6 unicast-routing<br>ipv6 route 2001:DB8:1:10::/64 2001:DB8:1:2::2</p>
+
+                <h4>Step 3: Configure ACLs on R3</h4>
+                <p><strong>Block HTTP (port 80)</strong><br>R3(config)# ipv6 access-list BLOCK-HTTP<br>R3(config-ipv6-acl)# deny tcp any any eq 80<br>R3(config-ipv6-acl)# permit ipv6 any any<br>R3(config-ipv6-acl)# exit<br>R3(config)# interface gigabitEthernet0/0<br>R3(config-if)# ipv6 traffic-filter BLOCK-HTTP in<br>R3(config-if)# exit<br>R3(config)# interface gigabitEthernet0/1<br>R3(config-if)# ipv6 traffic-filter BLOCK-HTTP in<br>R3(config-if)# exit</p>
+                <p><strong>Block HTTPS (port 443)</strong><br>R3(config)# ipv6 access-list BLOCK-HTTPS<br>R3(config-ipv6-acl)# deny tcp any any eq 443<br>R3(config-ipv6-acl)# permit ipv6 any any<br>R3(config-ipv6-acl)# exit<br>R3(config)# interface gigabitEthernet0/0<br>R3(config-if)# ipv6 traffic-filter BLOCK-HTTPS in<br>R3(config-if)# exit<br>R3(config)# interface gigabitEthernet0/1<br>R3(config-if)# ipv6 traffic-filter BLOCK-HTTPS in<br>R3(config-if)# exit</p>
+
+                <h4>Step 4: Verification</h4>
+                <p><strong>Server Configuration</strong><br>Config &gt; Services &gt; HTTP/HTTPS: Turn ON both services</p>
+                <p><strong>Test from PCA/PCB</strong><br>Desktop &gt; Web Browser<br>- Try accessing http://[2001:DB8:1:10::30] (Should fail)<br>- Try accessing https://[2001:DB8:1:10::30] (Should fail)</p>
+                <p><strong>Verify ACLs on R3</strong><br>R3# show ipv6 access-list BLOCK-HTTP<br>(Should show matches on deny statements)<br>R3# show ipv6 access-list BLOCK-HTTPS<br>(Should show matches on deny statements)</p>
+                <p><strong>Test Connectivity</strong><br>PCA&gt; ping 2001:DB8:1:10::30 (Should work)<br>PCB&gt; ping 2001:DB8:1:10::30 (Should work)</p>
+
+                
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
+
+
+
+        <!-- Practical 13 -->
+        <div class="card">
+            <h2>Practical 13: Configure ACL on R3 to Block ICMP</h2>
+            <div class="summary">
+                <p><strong>Objectives:</strong> Configure static routing and apply an IPv6 ACL on R3 to block ICMP access.</p>
+                <p><strong>Topology:</strong> R1, R2, R3, PC1, PC2, Server with IPv6 configurations.</p>
+            </div>
+            <div class="full-content">
+                <h3>Topology</h3>
+                <table>
+                    <tr><th>Device</th><th>Interface</th><th>IPv6 Address/Prefix</th><th>Default Gateway</th></tr>
+                    <tr><td>PC1</td><td>NIC</td><td>2001:DB8:1:10::10/64</td><td>FE80::1</td></tr>
+                    <tr><td>PC2</td><td>NIC</td><td>2001:DB8:1:11::11/64</td><td>FE80::1</td></tr>
+                    <tr><td>R1</td><td>gig0/0</td><td>2001:DB8:1:10::1/64</td><td>FE80::1</td></tr>
+                    <tr><td>R1</td><td>gig0/1</td><td>2001:DB8:1:11::1/64</td><td>FE80::1</td></tr>
+                    <tr><td>R1</td><td>se0/1/0</td><td>2001:DB8:1:1::1/64</td><td>FE80::1</td></tr>
+                    <tr><td>R2</td><td>se0/1/0</td><td>2001:DB8:1:1::2/64</td><td>FE80::2</td></tr>
+                    <tr><td>R2</td><td>se0/1/1</td><td>2001:DB8:1:2::2/64</td><td>FE80::2</td></tr>
+                    <tr><td>R3</td><td>gig0/0</td><td>2001:DB8:1:30::1/64</td><td>FE80::3</td></tr>
+                    <tr><td>R3</td><td>se0/1/0</td><td>2001:DB8:1:2::1/64</td><td>FE80::3</td></tr>
+                    <tr><td>Server</td><td>NIC</td><td>2001:DB8:1:30::30/64</td><td>FE80::3</td></tr>
+                </table>
+                <h3>Objectives</h3>
+                <ul>
+                    <li>Configure IPv6 addresses on all devices.</li>
+                    <li>Configure static routing across R1, R2, and R3.</li>
+                    <li>Configure and apply an IPv6 ACL on R3 to block ICMP traffic.</li>
+                    <li>Verify the ACL implementation.</li>
+                </ul>
+                <h3>Steps</h3>
+                <h4>Step 1: Configure IP Addresses</h4>
+                <p><strong>PC1</strong><br>Desktop > IP Configuration<br>IPv6 Address: 2001:DB8:1:10::10<br>Prefix Length: 64<br>Link Local Address: FE80::1<br>Default Gateway: 2001:DB8:1:10::1</p>
+                <p><strong>PC2</strong><br>Desktop > IP Configuration<br>IPv6 Address: 2001:DB8:1:11::11<br>Prefix Length: 64<br>Link Local Address: FE80::1<br>Default Gateway: 2001:DB8:1:11::1</p>
+                <p><strong>Server</strong><br>Desktop > IP Configuration<br>IPv6 Address: 2001:DB8:1:30::30<br>Prefix Length: 64<br>Link Local Address: FE80::3<br>Default Gateway: 2001:DB8:1:30::1</p>
+                <p><strong>R1</strong><br>enable<br>configure terminal<br>interface gigabitEthernet0/0<br>ipv6 address 2001:DB8:1:10::1/64<br>ipv6 address FE80::1 link-local<br>no shutdown<br>exit<br>interface gigabitEthernet0/1<br>ipv6 address 2001:DB8:1:11::1/64<br>ipv6 address FE80::1 link-local<br>no shutdown<br>exit<br>interface serial0/1/0<br>ipv6 address 2001:DB8:1:1::1/64<br>ipv6 address FE80::1 link-local<br>no shutdown<br>exit</p>
+                <p><strong>R2</strong><br>enable<br>configure terminal<br>interface serial0/1/0<br>ipv6 address 2001:DB8:1:1::2/64<br>ipv6 address FE80::2 link-local<br>no shutdown<br>exit<br>interface serial0/1/1<br>ipv6 address 2001:DB8:1:2::2/64<br>ipv6 address FE80::2 link-local<br>no shutdown<br>exit</p>
+                <p><strong>R3</strong><br>enable<br>configure terminal<br>interface gigabitEthernet0/0<br>ipv6 address 2001:DB8:1:30::1/64<br>ipv6 address FE80::3 link-local<br>no shutdown<br>exit<br>interface serial0/1/0<br>ipv6 address 2001:DB8:1:2::1/64<br>ipv6 address FE80::3 link-local<br>no shutdown<br>exit</p>
+
+                <h4>Step 2: Configure Static Routing</h4>
+                <p><strong>R1</strong><br>ipv6 unicast-routing<br>ipv6 route 2001:DB8:1:30::/64 2001:DB8:1:1::2</p>
+                <p><strong>R2</strong><br>ipv6 unicast-routing<br>ipv6 route 2001:DB8:1:10::/64 2001:DB8:1:1::1<br>ipv6 route 2001:DB8:1:11::/64 2001:DB8:1:1::1<br>ipv6 route 2001:DB8:1:30::/64 2001:DB8:1:2::1</p>
+                <p><strong>R3</strong><br>ipv6 unicast-routing<br>ipv6 route 2001:DB8:1:10::/64 2001:DB8:1:2::2<br>ipv6 route 2001:DB8:1:11::/64 2001:DB8:1:2::2</p>
+
+                <h4>Step 3: Configure and Apply ACL on R3</h4>
+                <p><strong>Create and Apply ACL</strong><br>R3(config)# ipv6 access-list BLOCK-ICMP<br>R3(config-ipv6-acl)# deny icmp any any<br>R3(config-ipv6-acl)# permit ipv6 any any<br>R3(config-ipv6-acl)# exit<br>R3(config)# interface gigabitEthernet0/0<br>R3(config-if)# ipv6 traffic-filter BLOCK-ICMP in<br>R3(config-if)# exit<br>R3(config)# interface serial0/1/0<br>R3(config-if)# ipv6 traffic-filter BLOCK-ICMP in<br>R3(config-if)# exit</p>
+                <p><em>Notes:</em><br>- This ACL blocks all ICMP traffic (including ping) coming into R3 from both the LAN (Server) and WAN (R2) interfaces.<br>- <code>permit ipv6 any any</code> allows all other IPv6 traffic.<br>- Applied inbound on both interfaces to block ICMP from all sources trying to reach R3 or beyond.</p>
+
+                <h4>Step 4: Verification</h4>
+                <p><strong>Test Before ACL (remove ACL temporarily if applied)</strong><br>From PC1: <code>ping 2001:DB8:1:30::30</code> (Should work)<br>From PC2: <code>ping 2001:DB8:1:30::30</code> (Should work)<br>From Server: <code>ping 2001:DB8:1:10::10</code> (Should work)</p>
+                <p><strong>Apply ACL and Test Again</strong><br>From PC1: <code>ping 2001:DB8:1:30::30</code> (Should fail)<br>From PC2: <code>ping 2001:DB8:1:30::30</code> (Should fail)<br>From Server: <code>ping 2001:DB8:1:10::10</code> (Should fail)</p>
+                <p><strong>Verify ACL on R3</strong><br>R3# show ipv6 access-list BLOCK-ICMP<br>(Should show matches on the <code>deny icmp any any</code> line, indicating ICMP packets are blocked)<br>R3# show running-config | include ipv6 traffic-filter<br>(Verifies ACL is applied to interfaces)</p>
+                <p><strong>Test Other Traffic (Optional)</strong><br>Configure HTTP on Server and try accessing from PC1/PC2 web browser<br>(Should still work, confirming only ICMP is blocked)</p>
+
+            </div>
+            <button class="read-more">Read More</button>
+        </div>
            <script>
+        //     function trackVisit() {
+        //     fetch('https://script.google.com/macros/s/1AbCdEfGhIjKlMnOpQrStUvWxYz/exec', {
+        //         method: 'GET',
+        //         mode: 'no-cors' // Required for GitHub Pages
+        //     })
+        //     .then(() => console.log("Visit tracked"))
+        //     .catch(err => console.error("Error:", err));
+        // }
+
+        // // Track visit when the page loads (only if password is correct)
+        // window.onload = function() {
+        //     if (userInput === correctPassword) {
+        //         trackVisit();
+        //     }
+        // };
             document.addEventListener('DOMContentLoaded', () => {
                 const buttons = document.querySelectorAll('.read-more');
                 
@@ -792,6 +984,8 @@
                     });
                 });
             });
+
+
         </script>
 </body>
 </html>
